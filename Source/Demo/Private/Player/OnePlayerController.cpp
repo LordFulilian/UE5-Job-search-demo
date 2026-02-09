@@ -65,7 +65,7 @@ void AOnePlayerController::SetupInputComponent()
 void AOnePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	// °²È«¼ì²é
 	if (PlayerContext)
 	{

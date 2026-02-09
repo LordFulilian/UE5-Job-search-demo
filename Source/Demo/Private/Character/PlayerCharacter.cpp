@@ -1,57 +1,57 @@
 
 #include "Character/PlayerCharacter.h"
 
-// ¡¾ºËĞÄÍ·ÎÄ¼ş¡¿
-#include "GameFramework/SpringArmComponent.h" // µ¯»É±Û
-#include "Camera/CameraComponent.h"           // ÉãÏñ»ú
-#include "GameFramework/CharacterMovementComponent.h" // ½ÇÉ«ÒÆ¶¯×é¼ş
-#include "GameFramework/Controller.h"         // ¿ØÖÆÆ÷
-#include "EnhancedInputComponent.h"           // ÔöÇ¿ÊäÈë×é¼ş
+// ã€æ ¸å¿ƒå¤´æ–‡ä»¶ã€‘
+#include "GameFramework/SpringArmComponent.h" // å¼¹ç°§è‡‚
+#include "Camera/CameraComponent.h"           // æ‘„åƒæœº
+#include "GameFramework/CharacterMovementComponent.h" // è§’è‰²ç§»åŠ¨ç»„ä»¶
+#include "GameFramework/Controller.h"         // æ§åˆ¶å™¨
+#include "EnhancedInputComponent.h"           // å¢å¼ºè¾“å…¥ç»„ä»¶
 #include "AbilitySystemComponent.h"
-#include "InputActionValue.h"                 // ÊäÈëÖµÀàĞÍ
-#include "Player/OPlayerState.h"              // Íæ¼Ò×´Ì¬
-
-
+#include "Player/OnePlayerController.h"
+#include "InputActionValue.h"                 // è¾“å…¥å€¼ç±»å‹
+#include "Player/OPlayerState.h"              // ç©å®¶çŠ¶æ€
+#include "UI/HUD/PlayerHUD.h"
 
 
 APlayerCharacter::APlayerCharacter()
 {
-	// 1. ÉèÖÃ½ÇÉ«µÄĞı×ªÂß¼­ (¶şÓÎ¾­µäÉèÖÃ)
-	// ÕâÀïµÄÂß¼­ÊÇ£ºÊó±ê×ª¶¯Ê±£¬½ÇÉ«ÉíÌå²»¸ú×Å×ª£¬Ö»ÓĞÉãÏñ»ú×ª¡£
-	// Ö»ÓĞµ±Äã°´WASDÒÆ¶¯Ê±£¬½ÇÉ«²Å×Ô¶¯×ªÏòÒÆ¶¯·½Ïò¡£
+	// 1. è®¾ç½®è§’è‰²çš„æ—‹è½¬é€»è¾‘ (äºŒæ¸¸ç»å…¸è®¾ç½®)
+	// è¿™é‡Œçš„é€»è¾‘æ˜¯ï¼šé¼ æ ‡è½¬åŠ¨æ—¶ï¼Œè§’è‰²èº«ä½“ä¸è·Ÿç€è½¬ï¼Œåªæœ‰æ‘„åƒæœºè½¬ã€‚
+	// åªæœ‰å½“ä½ æŒ‰WASDç§»åŠ¨æ—¶ï¼Œè§’è‰²æ‰è‡ªåŠ¨è½¬å‘ç§»åŠ¨æ–¹å‘ã€‚
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// ÅäÖÃÒÆ¶¯×é¼ş
-	GetCharacterMovement()->bOrientRotationToMovement = true; // ÈÃ½ÇÉ«³¯ÏòÒÆ¶¯·½Ïò
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ×ªÉíËÙ¶È
-	GetCharacterMovement()->JumpZVelocity = 700.f; // ÌøÔ¾¸ß¶È
-	GetCharacterMovement()->AirControl = 0.35f;    // ¿ÕÖĞ¿É¿ØĞÔ
+	// é…ç½®ç§»åŠ¨ç»„ä»¶
+	GetCharacterMovement()->bOrientRotationToMovement = true; // è®©è§’è‰²æœå‘ç§»åŠ¨æ–¹å‘
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // è½¬èº«é€Ÿåº¦
+	GetCharacterMovement()->JumpZVelocity = 700.f; // è·³è·ƒé«˜åº¦
+	GetCharacterMovement()->AirControl = 0.35f;    // ç©ºä¸­å¯æ§æ€§
 
-	// 2. ´´½¨µ¯»É±Û (SpringArm) - Ïàµ±ÓÚ×ÔÅÄ¸Ë
+	// 2. åˆ›å»ºå¼¹ç°§è‡‚ (SpringArm) - ç›¸å½“äºè‡ªæ‹æ†
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // ¸Ë×Ó³¤¶È (ÉãÏñ»ú¾àÀë)
-	CameraBoom->bUsePawnControlRotation = true; // ¹Ø¼ü£ºÈÃ¸Ë×Ó¸úËæÊó±êĞı×ª
+	CameraBoom->TargetArmLength = 400.0f; // æ†å­é•¿åº¦ (æ‘„åƒæœºè·ç¦»)
+	CameraBoom->bUsePawnControlRotation = true; // å…³é”®ï¼šè®©æ†å­è·Ÿéšé¼ æ ‡æ—‹è½¬
 
-	// 3. ´´½¨ÉãÏñ»ú (Camera) - Ïàµ±ÓÚÑÛ¾¦
+	// 3. åˆ›å»ºæ‘„åƒæœº (Camera) - ç›¸å½“äºçœ¼ç›
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // ×°ÔÚ¸Ë×ÓÄ©¶Ë
-	FollowCamera->bUsePawnControlRotation = false; // ÉãÏñ»ú²»ĞèÒªÔÙ×ªÁË£¬ÒòÎª¸Ë×ÓÒÑ¾­×ªÁË
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // è£…åœ¨æ†å­æœ«ç«¯
+	FollowCamera->bUsePawnControlRotation = false; // æ‘„åƒæœºä¸éœ€è¦å†è½¬äº†ï¼Œå› ä¸ºæ†å­å·²ç»è½¬äº†
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	// ·şÎñÆ÷¶Ë³õÊ¼»¯ GAS
+	// æœåŠ¡å™¨ç«¯åˆå§‹åŒ– GAS
 	InitAbilityActorInfo();
 }
 
 void APlayerCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
-	// ¿Í»§¶Ë³õÊ¼»¯ GAS
+	// å®¢æˆ·ç«¯åˆå§‹åŒ– GAS
 	InitAbilityActorInfo();
 }
 
@@ -62,17 +62,22 @@ UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
 
 void APlayerCharacter::InitAbilityActorInfo()
 {
-	// »ñÈ¡ PlayerState
+	// è·å– PlayerState
 	AOPlayerState* OPlayerState = GetPlayerState<AOPlayerState>();
+	check(OPlayerState)
+	// åˆå§‹åŒ– ASC çš„ ActorInfo (OwnerActor = PlayerState, AvatarActor = Character)
+	OPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(OPlayerState, this);
 
-	if (OPlayerState)
+	// è®¾ç½®æœ¬åœ°æŒ‡é’ˆ
+	AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
+	AttributeSet = OPlayerState->GetAttributeSet();
+	
+	if (AOnePlayerController* OnePlayerController = Cast<AOnePlayerController>(GetController()))
 	{
-		// ³õÊ¼»¯ ASC µÄ ActorInfo (OwnerActor = PlayerState, AvatarActor = Character)
-		OPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(OPlayerState, this);
-
-		// ÉèÖÃ±¾µØÖ¸Õë
-		AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
-		AttributeSet = OPlayerState->GetAttributeSet();
+		if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(OnePlayerController->GetHUD()))
+		{
+			PlayerHUD->InitOverlay(OnePlayerController,OPlayerState,AbilitySystemComponent,AttributeSet);
+		}
 	}
 }
 
@@ -85,31 +90,31 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// ½«ÆÕÍ¨ÊäÈë×é¼şÇ¿×ªÎªÔöÇ¿ÊäÈë×é¼ş
+	// å°†æ™®é€šè¾“å…¥ç»„ä»¶å¼ºè½¬ä¸ºå¢å¼ºè¾“å…¥ç»„ä»¶
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// °ó¶¨ ÒÆ¶¯
+		// ç»‘å®š ç§»åŠ¨
 		if (MoveAction)
 			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
-		// °ó¶¨ ÊÓ½Ç
+		// ç»‘å®š è§†è§’
 		if (LookAction)
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 
-		// °ó¶¨ Ëõ·Å
+		// ç»‘å®š ç¼©æ”¾
 		if (ZoomAction)
 			EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Zoom);
 
-		// °ó¶¨ ±¼ÅÜ
+		// ç»‘å®š å¥”è·‘
 		if (SprintAction)
 		{
-			// °´ÏÂÊ±¼ÓËÙ
+			// æŒ‰ä¸‹æ—¶åŠ é€Ÿ
 			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SprintStart);
-			// ËÉ¿ªÊ±¼õËÙ
+			// æ¾å¼€æ—¶å‡é€Ÿ
 			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::SprintStop);
 		}
 
-		// °ó¶¨ ÌøÔ¾
+		// ç»‘å®š è·³è·ƒ
 		if (JumpAction)
 		{
 			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
@@ -120,22 +125,22 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	// »ñÈ¡ÊäÈëµÄ¶şÎ¬ÏòÁ¿ (X=A/D, Y=W/S)
+	// è·å–è¾“å…¥çš„äºŒç»´å‘é‡ (X=A/D, Y=W/S)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
-		// 1. ÕÒ³öÎÒÃÇÒªÍùÄÄ¸ö·½ÏòÅÜ
+		// 1. æ‰¾å‡ºæˆ‘ä»¬è¦å¾€å“ªä¸ªæ–¹å‘è·‘
 		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0); // Ö»È¡Ë®Æ½·½Ïò
+		const FRotator YawRotation(0, Rotation.Yaw, 0); // åªå–æ°´å¹³æ–¹å‘
 
-		// 2. ¼ÆËã³öÇ°·½ÏòÁ¿ (XÖá)
+		// 2. è®¡ç®—å‡ºå‰æ–¹å‘é‡ (Xè½´)
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		// 3. ¼ÆËã³öÓÒ·½ÏòÁ¿ (YÖá)
+		// 3. è®¡ç®—å‡ºå³æ–¹å‘é‡ (Yè½´)
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// 4. Ìí¼ÓÒÆ¶¯ÊäÈë
+		// 4. æ·»åŠ ç§»åŠ¨è¾“å…¥
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
@@ -143,34 +148,34 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
 {
-	// »ñÈ¡Êó±êÒÆ¶¯µÄ¶şÎ¬ÏòÁ¿
+	// è·å–é¼ æ ‡ç§»åŠ¨çš„äºŒç»´å‘é‡
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
-		// ×óÓÒ×ªÍ·
+		// å·¦å³è½¬å¤´
 		AddControllerYawInput(LookAxisVector.X);
-		// ÉÏÏÂÌ§Í·
+		// ä¸Šä¸‹æŠ¬å¤´
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
 
 void APlayerCharacter::Zoom(const FInputActionValue& Value)
 {
-	// »ñÈ¡¹öÂÖµÄÖµ (Í¨³£ÊÇ 1.0 »ò -1.0)
+	// è·å–æ»šè½®çš„å€¼ (é€šå¸¸æ˜¯ 1.0 æˆ– -1.0)
 	float ZoomValue = Value.Get<float>();
 
 	if (CameraBoom)
 	{
-		// ¶¨ÒåËõ·ÅµÄ·¶Î§
-		const float MinDistance = 150.0f; // ×î½ü¾àÀë
-		const float MaxDistance = 1000.0f; // ×îÔ¶¾àÀë
-		const float ZoomSpeed = 20.0f;     // Ëõ·ÅËÙ¶È
+		// å®šä¹‰ç¼©æ”¾çš„èŒƒå›´
+		const float MinDistance = 150.0f; // æœ€è¿‘è·ç¦»
+		const float MaxDistance = 1000.0f; // æœ€è¿œè·ç¦»
+		const float ZoomSpeed = 20.0f;     // ç¼©æ”¾é€Ÿåº¦
 
-		// ¼ÆËãĞÂµÄ±Û³¤
+		// è®¡ç®—æ–°çš„è‡‚é•¿
 		float NewDistance = CameraBoom->TargetArmLength - (ZoomValue * ZoomSpeed);
 
-		// ÏŞÖÆÔÚÕâ¸ö·¶Î§ÄÚ (Clamp)
+		// é™åˆ¶åœ¨è¿™ä¸ªèŒƒå›´å†… (Clamp)
 		CameraBoom->TargetArmLength = FMath::Clamp(NewDistance, MinDistance, MaxDistance);
 	}
 }
@@ -179,7 +184,7 @@ void APlayerCharacter::SprintStart()
 {
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 1000.f; // ÉèÖÃÎª±¼ÅÜËÙ¶È
+		GetCharacterMovement()->MaxWalkSpeed = 1000.f; // è®¾ç½®ä¸ºå¥”è·‘é€Ÿåº¦
 	}
 }
 
@@ -187,6 +192,6 @@ void APlayerCharacter::SprintStop()
 {
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 400.f; // »Ö¸´Ä¬ÈÏËÙ¶È
+		GetCharacterMovement()->MaxWalkSpeed = 400.f; // æ¢å¤é»˜è®¤é€Ÿåº¦
 	}
 }

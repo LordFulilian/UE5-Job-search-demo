@@ -25,10 +25,6 @@ void APlayerEffectActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 		
 		UPlayerAttributeSet* MutablePlayerAttributeSet = const_cast<UPlayerAttributeSet*>(PlayerAttributeSet);
 		MutablePlayerAttributeSet->SetHealth(PlayerAttributeSet->GetHealth() + 25.f);
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("³ÔµôÑªÆ¿£¡ÑªÁ¿ +25"));
-		}
 		Destroy();
 	}
 }

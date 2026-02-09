@@ -8,9 +8,9 @@ ACharacterBase::ACharacterBase()
  	
 	PrimaryActorTick.bCanEverTick = false;
 
-	//创建武器骨骼网络
+	//鍒涘缓姝﹀櫒楠ㄩ缃戠粶
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
-	//将武器附加到角色的手部插槽上
+	//灏嗘鍣ㄩ檮鍔犲埌瑙掕壊鐨勬墜閮ㄦ彃妲戒笂
 	Weapon->SetupAttachment(GetMesh(), "WeaponHandSocket");
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 

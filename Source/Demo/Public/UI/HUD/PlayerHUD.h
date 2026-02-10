@@ -10,7 +10,7 @@
 
 class UOverlayWidgetController;
 class UPlayerUserWidget;
-struct FWidgetControllerParmas;
+struct FWidgetControllerParams;
 /**
  * 
  */
@@ -24,7 +24,7 @@ public:
 	UPROPERTY()
 	TObjectPtr<UPlayerUserWidget> OverlayWidget;
 	
-	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParmas& WCParmas);
+	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
 	
 	void InitOverlay(APlayerController* PC,APlayerState* PS,UAbilitySystemComponent* ASC,UAttributeSet*AS);
 protected:

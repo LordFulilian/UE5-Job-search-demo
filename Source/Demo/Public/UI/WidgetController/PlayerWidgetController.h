@@ -12,11 +12,11 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 
 USTRUCT(BlueprintType)
-struct FWidgetControllerParmas
+struct FWidgetControllerParams
 {
 	GENERATED_BODY()
-	FWidgetControllerParmas(){}
-	FWidgetControllerParmas(APlayerController*PC,APlayerState*PS,UAbilitySystemComponent*ASC,UAttributeSet*AS)
+	FWidgetControllerParams(){}
+	FWidgetControllerParams(APlayerController*PC,APlayerState*PS,UAbilitySystemComponent*ASC,UAttributeSet*AS)
 	:PlayerCcontroller(PC),PlayerState(PS),AbilitySystemComponent(ASC),AttributeSet(AS){}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -41,7 +41,8 @@ class DEMO_API UPlayerWidgetController : public UObject
 	
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetWidgetControllerParmas(const FWidgetControllerParmas& WCParmas);	
+	void SetWidgetControllerParams(const FWidgetControllerParams& WCParams);
+	virtual void BroadcastInitialValues();
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TObjectPtr<APlayerController> PlayerController;

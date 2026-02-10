@@ -3,10 +3,15 @@
 
 #include "UI/WidgetController/PlayerWidgetController.h"
 
-void UPlayerWidgetController::SetWidgetControllerParmas(const FWidgetControllerParmas& WCParmas)
+void UPlayerWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WCParams)
 {
-	PlayerController = WCParmas.PlayerCcontroller;
-	PlayerState = WCParmas.PlayerState;
-	AbilitySystemComponent = WCParmas.AbilitySystemComponent;
-	AttributeSet = WCParmas.AttributeSet;
+	PlayerController = WCParams.PlayerCcontroller;
+	PlayerState = WCParams.PlayerState;
+	AbilitySystemComponent = WCParams.AbilitySystemComponent;
+	AttributeSet = WCParams.AttributeSet;
+}
+
+void UPlayerWidgetController::BroadcastInitialValues()
+{
+	
 }

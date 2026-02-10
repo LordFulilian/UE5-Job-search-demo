@@ -5,12 +5,12 @@
 #include "UI/Widget/PlayerUserWidget.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
 
-UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController(const FWidgetControllerParmas& WCParmas)
+UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController(const FWidgetControllerParams& WCParams)
 {
 	if (OverlayWidgetController == nullptr)
 	{
 		OverlayWidgetController = NewObject<UOverlayWidgetController>(this,OverlayWidgetControllerClass);
-		OverlayWidgetController->SetWidgetControllerParmas(WCParmas);
+		OverlayWidgetController->SetWidgetControllerParams(WCParams);
 		
 		return OverlayWidgetController;
 	}
@@ -25,11 +25,12 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 	UUserWidget*Widget= CreateWidget<UUserWidget>(GetWorld(),OverlayWidgetClass);
 	OverlayWidget = Cast<UPlayerUserWidget>(Widget);
 	
-	const FWidgetControllerParmas WidgetControllerParmas(PC,PS,ASC,AS);
+	const FWidgetControllerParams WidgetControllerParams(PC,PS,ASC,AS);
 	
-	UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParmas);
+	UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
 	
 	OverlayWidget->SetWidgetController(WidgetController);
+	WidgetController->BroadcastInitialValues();
 	
 	Widget->AddToViewport();
 	

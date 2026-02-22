@@ -19,6 +19,7 @@ class DEMO_API APlayerCharacter : public ACharacterBase
 	GENERATED_BODY()
 
 public:
+	virtual void OnRep_PlayerState() override;
 	APlayerCharacter(); 
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_Controller() override;

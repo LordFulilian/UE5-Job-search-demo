@@ -15,3 +15,8 @@ void UPlayerWidgetController::BroadcastInitialValues()
 {
 	
 }
+
+void UPlayerWidgetController::BindCallbacksToDependencies()
+{
+	
+}

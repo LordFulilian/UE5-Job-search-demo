@@ -9,11 +9,29 @@ void UOverlayWidgetController::BroadcastInitialValues()
 {
 	const UPlayerAttributeSet* PlayerAttributeSet = CastChecked<UPlayerAttributeSet>(AttributeSet);
 	
-	UE_LOG(LogTemp, Warning, TEXT("BroadcastInitialValues - Health: %f, MaxHealth: %f"), 
-		PlayerAttributeSet->GetHealth(), 
-		PlayerAttributeSet->GetMaxHealth());
 	OnHealthChanged.Broadcast(PlayerAttributeSet->GetHealth());
 	OnMaxHealthChanged.Broadcast(PlayerAttributeSet->GetMaxHealth());
 	
 	
+}
+
+void UOverlayWidgetController::BindCallbacksToDependencies()
+{
+	const UPlayerAttributeSet* PlayerAttributeSet = CastChecked<UPlayerAttributeSet>(AttributeSet);
+	
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetHealthAttribute()).AddUObject(this,&UOverlayWidgetController::HealthChanged);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetMaxHealthAttribute()).AddUObject(this,&UOverlayWidgetController::MaxHealthChanged);
+	
+}
+
+void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data)const
+{
+	OnHealthChanged.Broadcast(Data.NewValue);
+}
+
+void UOverlayWidgetController::MaxHealthChanged(const FOnAttributeChangeData& Data)const
+{
+	OnMaxHealthChanged.Broadcast(Data.NewValue);
 }

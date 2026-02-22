@@ -14,6 +14,12 @@
 #include "UI/HUD/PlayerHUD.h"
 
 
+void APlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	InitAbilityActorInfo();
+}
+
 APlayerCharacter::APlayerCharacter()
 {
 	// 1. 设置角色的旋转逻辑 (二游经典设置)
@@ -51,8 +57,7 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 void APlayerCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
-	// 客户端初始化 GAS
-	InitAbilityActorInfo();
+	
 }
 
 UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const

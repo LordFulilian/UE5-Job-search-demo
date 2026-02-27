@@ -83,4 +83,5 @@ public:
 
 private:
 	void SetEffectProperties (const struct FGameplayEffectModCallbackData& Data,FEffectProperties& Props)const;
+	
 };

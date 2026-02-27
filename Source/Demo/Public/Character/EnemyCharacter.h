@@ -18,10 +18,11 @@ class DEMO_API AEnemyCharacter : public ACharacterBase
 public:
 	AEnemyCharacter();
 
-	// 高亮接口实现
+	// 楂樹寒鎺ュ彛瀹炵幇
 	void ToggleHighlight_Implementation(bool bActive);
 
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void InitAbilityActorInfo() override;
 };

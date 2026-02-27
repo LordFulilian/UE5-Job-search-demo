@@ -23,7 +23,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	// ÎäÆ÷¹Ç÷ÀÍøÂç
+	// æ­¦å™¨éª¨éª¼ç½‘ç»œ
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
 
@@ -35,7 +35,7 @@ protected:
 	//
 	UPROPERTY()
 	TObjectPtr<UAttributeSet>AttributeSet;
-
-
+	
+	virtual void InitAbilityActorInfo();
 
 };

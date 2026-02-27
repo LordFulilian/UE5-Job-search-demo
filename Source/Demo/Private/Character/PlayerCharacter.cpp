@@ -4,12 +4,14 @@
 // 【核心头文件】
 #include "GameFramework/SpringArmComponent.h" // 弹簧臂
 #include "Camera/CameraComponent.h"           // 摄像机
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h" // 角色移动组件
 #include "GameFramework/Controller.h"         // 控制器
 #include "EnhancedInputComponent.h"           // 增强输入组件
 #include "AbilitySystemComponent.h"
 #include "Player/OnePlayerController.h"
 #include "InputActionValue.h"                 // 输入值类型
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "Player/OPlayerState.h"              // 玩家状态
 #include "UI/HUD/PlayerHUD.h"
 
@@ -72,7 +74,7 @@ void APlayerCharacter::InitAbilityActorInfo()
 	check(OPlayerState)
 	// 初始化 ASC 的 ActorInfo (OwnerActor = PlayerState, AvatarActor = Character)
 	OPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(OPlayerState, this);
-
+	Cast<UPlayerAbilitySystemComponent>(OPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
 	// 设置本地指针
 	AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
 	AttributeSet = OPlayerState->GetAttributeSet();

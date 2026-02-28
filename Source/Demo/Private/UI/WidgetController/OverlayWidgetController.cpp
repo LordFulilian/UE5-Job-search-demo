@@ -2,6 +2,8 @@
 
 
 #include "UI/WidgetController/OverlayWidgetController.h"
+
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
 
 
@@ -23,6 +25,18 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetHealthAttribute()).AddUObject(this,&UOverlayWidgetController::HealthChanged);
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetMaxHealthAttribute()).AddUObject(this,&UOverlayWidgetController::MaxHealthChanged);
+	
+	
+	Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
+	[](const FGameplayTagContainer& AssetTag)
+	{
+		for (const FGameplayTag& Tag : AssetTag)
+		{                      
+			const FString Msg = FString::Printf(TEXT("GE Tag: %s"),*Tag.ToString());
+			GEngine->AddOnScreenDebugMessage(-1,8.f,FColor::Red,Msg);
+		}
+	}	
+	);
 	
 }
 

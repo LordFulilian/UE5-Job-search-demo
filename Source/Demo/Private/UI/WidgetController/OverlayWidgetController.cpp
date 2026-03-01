@@ -5,6 +5,7 @@
 
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
+#include "Chaos/Deformable/MuscleActivationConstraints.h"
 
 
 void UOverlayWidgetController::BroadcastInitialValues()
@@ -22,30 +23,37 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	const UPlayerAttributeSet* PlayerAttributeSet = CastChecked<UPlayerAttributeSet>(AttributeSet);
 	
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetHealthAttribute()).AddUObject(this,&UOverlayWidgetController::HealthChanged);
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetMaxHealthAttribute()).AddUObject(this,&UOverlayWidgetController::MaxHealthChanged);
-	
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetHealthAttribute()).AddLambda(
+	[this](const FOnAttributeChangeData& Data)
+	{
+		OnHealthChanged.Broadcast(Data.NewValue);	
+	}	
+	);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetMaxHealthAttribute()).AddLambda(
+	[this](const FOnAttributeChangeData& Data)
+{
+	OnHealthChanged.Broadcast(Data.NewValue);	
+}	
+);
 	
 	Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
-	[](const FGameplayTagContainer& AssetTag)
+	[this](const FGameplayTagContainer& AssetTag)
 	{
 		for (const FGameplayTag& Tag : AssetTag)
-		{                      
-			const FString Msg = FString::Printf(TEXT("GE Tag: %s"),*Tag.ToString());
-			GEngine->AddOnScreenDebugMessage(-1,8.f,FColor::Red,Msg);
+		{     
+			FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
+			if (Tag.MatchesTag(MessageTag))
+			{
+				const FUIWidgetRow* Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable,Tag);
+				MessageWidgetRowDelegate.Broadcast(*Row);
+			}
+			
+			
+		
+			
 		}
 	}	
 	);
 	
 }
 
-void UOverlayWidgetController::HealthChanged(const FOnAttributeChangeData& Data)const
-{
-	OnHealthChanged.Broadcast(Data.NewValue);
-}
-
-void UOverlayWidgetController::MaxHealthChanged(const FOnAttributeChangeData& Data)const
-{
-	OnMaxHealthChanged.Broadcast(Data.NewValue);
-}

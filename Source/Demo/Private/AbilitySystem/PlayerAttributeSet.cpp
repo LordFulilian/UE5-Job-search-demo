@@ -16,6 +16,11 @@ void UPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Health, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+	
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Attack, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Defense, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, CritRate, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, CritDamage, COND_None, REPNOTIFY_Always);
 }
 
 void UPlayerAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -67,7 +72,10 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
     
     FEffectProperties Props;
 	SetEffectProperties(Data,Props);
-	
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
+	}
     
 }
 
@@ -75,10 +83,34 @@ void UPlayerAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) 
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, Health, OldHealth);
 }
-
 void UPlayerAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, MaxHealth, OldMaxHealth);
 }
+void UPlayerAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, Attack, OldAttack);
+	
+}
+
+void UPlayerAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldDefense) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, Defense, OldDefense);
+	
+}
+
+void UPlayerAttributeSet::OnRep_CritRate(const FGameplayAttributeData& OldCritRate) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, CritRate, OldCritRate);
+	
+}
+
+void UPlayerAttributeSet::OnRep_CritDamage(const FGameplayAttributeData& OldCritDamage) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, CritDamage, OldCritDamage);
+	
+}
+
+
 
 

@@ -69,9 +69,30 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Vital Attributes")
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, Health);
+	
+	
+	
+	// 1. 攻击力 (Attack)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Attack, Category = "Primary Attributes")
+	FGameplayAttributeData Attack;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, Attack);
 
-	UFUNCTION()
-	void OnRep_Health(const FGameplayAttributeData& OldHealth)	const;
+	
+
+	// 2. 防御力 (Defense)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Defense, Category = "Primary Attributes")
+	FGameplayAttributeData Defense;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, Defense);
+
+	// 3. 暴击率 (Crit Rate) - 通常以百分比表示，比如 0.05 代表 5%
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CritRate, Category = "Primary Attributes")
+	FGameplayAttributeData CritRate;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, CritRate);
+
+	// 4. 暴击伤害 (Crit Damage) - 通常初始值为 1.5 代表 150% 爆伤
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CritDamage, Category = "Primary Attributes")
+	FGameplayAttributeData CritDamage;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, CritDamage);
 	
 	// Max Health
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Vital Attributes")
@@ -79,7 +100,25 @@ public:
 	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, MaxHealth);
 
 	UFUNCTION()
-	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)	const;
+    	void OnRep_Health(const FGameplayAttributeData& OldHealth)	const;
+	
+	UFUNCTION()
+    	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)const;
+	
+	UFUNCTION()
+	void OnRep_Attack(const FGameplayAttributeData& OldAttack)	const;
+	
+	UFUNCTION()
+	void OnRep_Defense(const FGameplayAttributeData& OldDefense)const;
+	
+	UFUNCTION()
+	void OnRep_CritRate(const FGameplayAttributeData& OldCritRate)const;
+	
+	UFUNCTION()
+	void OnRep_CritDamage(const FGameplayAttributeData& OldCritDamage)const;
+    
+	
+
 
 private:
 	void SetEffectProperties (const struct FGameplayEffectModCallbackData& Data,FEffectProperties& Props)const;

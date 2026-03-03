@@ -86,6 +86,7 @@ void APlayerCharacter::InitAbilityActorInfo()
 			PlayerHUD->InitOverlay(OnePlayerController,OPlayerState,AbilitySystemComponent,AttributeSet);
 		}
 	}
+	InitialzePrimaryAttributes();
 }
 
 void APlayerCharacter::BeginPlay()

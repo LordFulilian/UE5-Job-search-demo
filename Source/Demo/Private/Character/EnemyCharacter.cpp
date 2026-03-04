@@ -60,3 +60,8 @@ void AEnemyCharacter::InitAbilityActorInfo()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 }
+
+int32 AEnemyCharacter::GetPlayerLevel()
+{
+	return Level;
+}

@@ -5,6 +5,8 @@
 #include <AbilitySystem/PlayerAbilitySystemComponent.h>
 #include <AbilitySystem/PlayerAttributeSet.h>
 
+#include "Net/UnrealNetwork.h"
+
 AOPlayerState::AOPlayerState()
 {
 	//创建能力系统组件
@@ -17,6 +19,16 @@ AOPlayerState::AOPlayerState()
 
 	//网络更新频率
 	NetUpdateFrequency = 100.f;
+}
+
+void AOPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AOPlayerState, Level);
+}
+
+void AOPlayerState::OnRep_Level(int32 OldLevel)
+{
 }
 
 UAbilitySystemComponent* AOPlayerState::GetAbilitySystemComponent() const

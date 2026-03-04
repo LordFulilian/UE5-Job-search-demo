@@ -67,6 +67,13 @@ UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+int32 APlayerCharacter::GetPlayerLevel()
+{
+	const AOPlayerState* OPlayerState = GetPlayerState<AOPlayerState>();
+	check(OPlayerState)
+	return OPlayerState->GetPlayerLevel();
+}
+
 void APlayerCharacter::InitAbilityActorInfo()
 {
 	// 获取 PlayerState
@@ -86,7 +93,7 @@ void APlayerCharacter::InitAbilityActorInfo()
 			PlayerHUD->InitOverlay(OnePlayerController,OPlayerState,AbilitySystemComponent,AttributeSet);
 		}
 	}
-	InitialzePrimaryAttributes();
+	InitialzeDefaultAttributes();
 }
 
 void APlayerCharacter::BeginPlay()

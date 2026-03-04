@@ -43,6 +43,38 @@ void UPlayerAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attri
     }
 }
 
+void UPlayerAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldDefense) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_CritRate(const FGameplayAttributeData& OldCritRate) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_CritDamage(const FGameplayAttributeData& OldCritDamage) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_EnergyRegen(const FGameplayAttributeData& OldEnergyRegen) const
+{
+}
+
+void UPlayerAttributeSet::OnRep_SkillDamageBonus(const FGameplayAttributeData& OldSkillDamageBonus) const
+{
+}
+
 void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const
 {
     Props.EffectContextHandle = Data.EffectSpec.GetContext();

@@ -25,6 +25,11 @@ UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 
 }
 
+int32 ACharacterBase::GetPlayerLevel()
+{
+	return 1;
+}
+
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -35,19 +40,20 @@ void ACharacterBase::InitAbilityActorInfo()
 {
 }
 
-void ACharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const
+void ACharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) 
 {
 	check(IsValid(GetAbilitySystemComponent()));
 	check(GameplayEffectClass);
 	const FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
-	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass,1.f,ContextHandle);
+	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass,Level,ContextHandle);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data,GetAbilitySystemComponent());
 }
 
-void ACharacterBase::InitialzeDefaultAttributes() const
+void ACharacterBase::InitialzeDefaultAttributes() 
 {
-	ApplyEffectToSelf(DefaultPrimaryAttributes,1.f);
-	ApplyEffectToSelf(DefaultSecondaryAttributes,1.f);
+	float CharacterLevel = static_cast<float>(GetPlayerLevel());
+	ApplyEffectToSelf(DefaultPrimaryAttributes,CharacterLevel);
+	ApplyEffectToSelf(DefaultSecondaryAttributes,CharacterLevel);
 }
 
 

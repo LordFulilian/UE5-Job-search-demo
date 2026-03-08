@@ -86,6 +86,8 @@ void APlayerCharacter::InitAbilityActorInfo()
 	AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
 	AttributeSet = OPlayerState->GetAttributeSet();
 	
+		InitialzeDefaultAttributes();
+	
 	if (AOnePlayerController* OnePlayerController = Cast<AOnePlayerController>(GetController()))
 	{
 		if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(OnePlayerController->GetHUD()))
@@ -93,7 +95,7 @@ void APlayerCharacter::InitAbilityActorInfo()
 			PlayerHUD->InitOverlay(OnePlayerController,OPlayerState,AbilitySystemComponent,AttributeSet);
 		}
 	}
-	InitialzeDefaultAttributes();
+
 }
 
 void APlayerCharacter::BeginPlay()

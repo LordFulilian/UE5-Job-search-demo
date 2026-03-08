@@ -6,9 +6,7 @@
 
 UPlayerAttributeSet::UPlayerAttributeSet()
 {
-    // 初始化基础血量 (其他属性可以通过 GE_InitPlayerAttributes 蓝图来初始化)
-    InitHealth(50.f);
-    InitMaxHealth(100.f);
+  
 }
 
 void UPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

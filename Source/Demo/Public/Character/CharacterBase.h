@@ -23,8 +23,10 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
+	virtual  int32 GetPlayerLevel() override;
 protected:
 	virtual void BeginPlay() override;
+	
 
 	// 武器骨骼网络
 	UPROPERTY(EditAnywhere, Category = "Weapon")
@@ -47,7 +49,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category = "Attributes")
 	TSubclassOf<UGameplayEffect>DefaultSecondaryAttributes;
 	
-	void ApplyEffectToSelf (TSubclassOf<UGameplayEffect>GameplayEffectClass,float Level) const;
-	void InitialzeDefaultAttributes() const;
+	void ApplyEffectToSelf (TSubclassOf<UGameplayEffect>GameplayEffectClass,float Level) ;
+	void InitialzeDefaultAttributes() ;
 
 };

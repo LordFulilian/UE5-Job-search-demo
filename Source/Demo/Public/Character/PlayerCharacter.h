@@ -44,6 +44,8 @@ protected:
 	//奔跑
 	void SprintStart();
 	void SprintStop();
+	
+	
 
 protected:
 	/** 摄像机组件部分 - 只有玩家才需要这些 */
@@ -72,5 +74,16 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> SprintAction;
-
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> OpenPanelAction;
+	
+	void ToggleOpenPanelAction();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TSubclassOf<UUserWidget> CharacterPanelClass;
+	
+	UPROPERTY()
+	 UUserWidget* CharacterPanelInstance;
+	
 };

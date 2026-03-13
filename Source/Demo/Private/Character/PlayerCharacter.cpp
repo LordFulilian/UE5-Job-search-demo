@@ -137,6 +137,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 		}
+		// 绑定角色面板
+		if (OpenPanelAction)
+		{
+			EnhancedInputComponent->BindAction(OpenPanelAction,ETriggerEvent::Started,this,&APlayerCharacter::ToggleOpenPanelAction);
+		}
+			
 	}
 }
 
@@ -210,5 +216,46 @@ void APlayerCharacter::SprintStop()
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = 400.f; // 恢复默认速度
+	}
+}
+
+void APlayerCharacter::ToggleOpenPanelAction()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	if (CharacterPanelInstance && CharacterPanelInstance->IsInViewport())
+	{
+		// --- 准备关闭面板 ---
+		CharacterPanelInstance->RemoveFromParent();
+        
+		FInputModeGameOnly InputMode;
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = false;
+       
+		// 🌟 新加：恢复游戏时间！
+		PC->SetPause(false); 
+	}
+	else
+	{
+		// --- 准备打开面板 ---
+		if (CharacterPanelInstance == nullptr && CharacterPanelClass != nullptr)
+		{
+			CharacterPanelInstance = CreateWidget<UUserWidget>(PC, CharacterPanelClass);
+		}
+
+		if (CharacterPanelInstance)
+		{
+			CharacterPanelInstance->AddToViewport();
+            
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(CharacterPanelInstance->TakeWidget()); 
+			InputMode.SetHideCursorDuringCapture(false);
+			PC->SetInputMode(InputMode);
+			PC->bShowMouseCursor = true;
+          
+			// 🌟 新加：暂停游戏时间！(怪物停止移动，角色无法操作)
+			PC->SetPause(true); 
+		}
 	}
 }

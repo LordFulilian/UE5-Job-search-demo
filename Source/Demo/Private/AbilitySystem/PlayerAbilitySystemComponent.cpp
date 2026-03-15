@@ -3,9 +3,12 @@
 
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 
+#include "PlayerGameplayTags.h"
+
 void UPlayerAbilitySystemComponent::AbilityActorInfoSet()
 {
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this,&UPlayerAbilitySystemComponent::EffectApplied);
+	
 }
 
 void UPlayerAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* AbilitySystemComponent,

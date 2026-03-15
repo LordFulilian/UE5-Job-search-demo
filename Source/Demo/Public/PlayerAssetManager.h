@@ -14,4 +14,9 @@ class DEMO_API UPlayerAssetManager : public UAssetManager
 {
 	GENERATED_BODY()
 	
+public:
+	static UPlayerAssetManager& Get();	
+	
+protected:
+	virtual  void StartInitialLoading() override;
 };

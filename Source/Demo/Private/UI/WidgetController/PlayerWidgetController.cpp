@@ -5,7 +5,7 @@
 
 void UPlayerWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WCParams)
 {
-	PlayerController = WCParams.PlayerCcontroller;
+	PlayerController = WCParams.PlayerController;
 	PlayerState = WCParams.PlayerState;
 	AbilitySystemComponent = WCParams.AbilitySystemComponent;
 	AttributeSet = WCParams.AttributeSet;

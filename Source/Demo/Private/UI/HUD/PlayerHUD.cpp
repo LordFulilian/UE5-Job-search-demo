@@ -17,6 +17,17 @@ UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController(const FWidgetCo
 	return OverlayWidgetController;
 }
 
+UAttributeMenuWidgetController* APlayerHUD::GetAttributeMenuWidgetController(const FWidgetControllerParams& WCParams)
+{
+	if (AttributeMenuWidgetController == nullptr)
+	{
+		AttributeMenuWidgetController = NewObject<UAttributeMenuWidgetController>(this,AttributeMenuWidgetControllerClass);
+		AttributeMenuWidgetController->SetWidgetControllerParams(WCParams);
+		AttributeMenuWidgetController->BindCallbacksToDependencies();
+	}
+	return AttributeMenuWidgetController;
+}
+
 void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
 	checkf(OverlayWidgetClass,TEXT("Overlay Widget Class uninitialized,please fill out BP_PlayerHUD"));

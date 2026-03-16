@@ -9,9 +9,13 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class DEMO_API UAttributeMenuWidgetController : public UPlayerWidgetController
 {
 	GENERATED_BODY()
 	
+	
+public:
+	virtual void BindCallbacksToDependencies() override;
+	virtual void BroadcastInitialValues() override;
 };

@@ -2,9 +2,9 @@
 
 #include "AbilitySystem/Data/AttributeInfo.h"
 
-FAttributeInfo UAttributeInfoAsset::FindAttributeInfoForTag(const FGameplayTag& AttributesTag, bool bLogNotFound) const // 🌟 这里同步修改
+FPlayerAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& AttributesTag, bool bLogNotFound) const // 🌟 这里同步修改
 {
-	for (const FAttributeInfo& Info : AttributeInformation)
+	for (const FPlayerAttributeInfo& Info : AttributeInformation)
 	{
 		if (Info.AttributeTag.MatchesTagExact(AttributesTag))
 		{
@@ -15,5 +15,5 @@ FAttributeInfo UAttributeInfoAsset::FindAttributeInfoForTag(const FGameplayTag& 
 	{
 		UE_LOG(LogTemp, Error, TEXT("Can't find Info for AttributeTag [%s] on AttributeInfo [%s]."), *AttributesTag.ToString(), *GetNameSafe(this));
 	}
-	return FAttributeInfo();
+	return FPlayerAttributeInfo();
 }

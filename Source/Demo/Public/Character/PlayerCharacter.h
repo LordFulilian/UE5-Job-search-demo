@@ -26,6 +26,11 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual int32 GetPlayerLevel() override;
 	
+	void ToggleOpenPanelAction();
+	
+	UPROPERTY()
+	UUserWidget* CharacterPanelInstance;
+
 private:
 	virtual void InitAbilityActorInfo() override;
 
@@ -78,12 +83,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> OpenPanelAction;
 	
-	void ToggleOpenPanelAction();
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TSubclassOf<UUserWidget> CharacterPanelClass;
 	
-	UPROPERTY()
-	 UUserWidget* CharacterPanelInstance;
+	
 	
 };

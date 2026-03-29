@@ -22,8 +22,19 @@ class DEMO_API APlayerHUD : public AHUD
 
 public:
 	
+
+	
 	UPROPERTY()
 	TObjectPtr<UPlayerUserWidget> OverlayWidget;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UPlayerUserWidget> AttributeMenuWidgetClass;
+	
+	
+	
+	UPROPERTY()
+	TObjectPtr<UPlayerUserWidget> AttributeMenuWidget;
+	
 	
 	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
 	UAttributeMenuWidgetController* GetAttributeMenuWidgetController(const FWidgetControllerParams& WCParams);
@@ -47,4 +58,6 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAttributeMenuWidgetController> AttributeMenuWidgetControllerClass;
+	
+
 };

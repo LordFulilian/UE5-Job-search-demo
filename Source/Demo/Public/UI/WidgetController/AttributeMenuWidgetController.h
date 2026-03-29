@@ -4,14 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UI/WidgetController/PlayerWidgetController.h"
-#include "AttributeMenuWidgetController.generated.h"
+#include "AbilitySystem/Data/AttributeInfo.h" 
+#include "AttributeMenuWidgetController.generated.h" 
 
 
-struct FAttributeInfo; 
-
-class UAttributeInfoAsset; 
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeInfoSignature, const FAttributeInfo&, Info);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeInfoSignature, const FPlayerAttributeInfo&, Info);
 
 /**
  * */
@@ -31,5 +28,5 @@ public:
 protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UAttributeInfoAsset> AttributeInfo;
+	TObjectPtr<UAttributeInfo> AttributeInfo;
 };

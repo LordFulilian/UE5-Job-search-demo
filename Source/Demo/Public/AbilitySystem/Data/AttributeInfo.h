@@ -8,7 +8,7 @@
 #include "AttributeInfo.generated.h"
 
 USTRUCT(BlueprintType)
-struct FAttributeInfo
+struct FPlayerAttributeInfo
 {
 	GENERATED_BODY()
     
@@ -23,18 +23,23 @@ struct FAttributeInfo
     
 	UPROPERTY(BlueprintReadOnly)
 	float AttributeValue = 0.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bIsPercentage = false;
 };
 
 /**
  * */
 UCLASS()
-class DEMO_API UAttributeInfoAsset : public UDataAsset 
+class DEMO_API UAttributeInfo : public UDataAsset 
 {
 	GENERATED_BODY()
     
 public:
-	FAttributeInfo FindAttributeInfoForTag(const FGameplayTag& AttributesTag, bool bLogNotFound = false) const;
+	FPlayerAttributeInfo FindAttributeInfoForTag(const FGameplayTag& AttributesTag, bool bLogNotFound = false) const;
     
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TArray<FAttributeInfo> AttributeInformation;
+	TArray<FPlayerAttributeInfo> AttributeInformation;
+	
+	
 };

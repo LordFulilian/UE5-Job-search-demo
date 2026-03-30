@@ -3,6 +3,8 @@
 #include "Character/CharacterBase.h"
 
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
+
 
 
 ACharacterBase::ACharacterBase()
@@ -49,12 +51,22 @@ void ACharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffe
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data,GetAbilitySystemComponent());
 }
 
-void ACharacterBase::InitialzeDefaultAttributes() 
+void ACharacterBase::InitializeDefaultAttributes() 
 {
 	float CharacterLevel = static_cast<float>(GetPlayerLevel());
 	ApplyEffectToSelf(DefaultPrimaryAttributes,CharacterLevel);
 	ApplyEffectToSelf(DefaultSecondaryAttributes,CharacterLevel);
 }
+
+void ACharacterBase::AddCharacterAbilities()
+{
+	UPlayerAbilitySystemComponent* PlayerASC = CastChecked<UPlayerAbilitySystemComponent>(AbilitySystemComponent);
+	if (!HasAuthority()) return;
+	
+	PlayerASC->AddCharacterAbilities(StartupAbilities);
+}
+
+
 
 
 

@@ -86,7 +86,7 @@ void APlayerCharacter::InitAbilityActorInfo()
 	AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
 	AttributeSet = OPlayerState->GetAttributeSet();
 	
-		InitialzeDefaultAttributes();
+		InitializeDefaultAttributes();
 	
 	if (AOnePlayerController* OnePlayerController = Cast<AOnePlayerController>(GetController()))
 	{

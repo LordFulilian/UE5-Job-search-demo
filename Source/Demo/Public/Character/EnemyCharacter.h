@@ -4,33 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "Character/CharacterBase.h"
+#include "interaction/EnemyInterface.h" 
 #include "EnemyCharacter.generated.h"
 
 /**
- * 
+ * 敌人角色类
  */
 UCLASS()
-class DEMO_API AEnemyCharacter : public ACharacterBase
+
+class DEMO_API AEnemyCharacter : public ACharacterBase, public IEnemyInterface 
 {
 	GENERATED_BODY()
-	
 
 public:
 	AEnemyCharacter();
 
-	// 高亮接口实现
-	void ToggleHighlight_Implementation(bool bActive);
+	
+	virtual void ToggleHighlight_Implementation(bool bActive) override;
 
 protected:
-
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
 	virtual int32 GetPlayerLevel() override;
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Character Class Defaults")
-    	int32 Level = 1;
-
-	
-	
-	
+    
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults")
+	int32 Level = 1;
 };

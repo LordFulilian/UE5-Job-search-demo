@@ -35,4 +35,19 @@ void FPlayerGameplayTags::InitializeNativeGameplayTags()
 	// 独立乘区
 	GameplayTags.Attributes_DamageBonus_SkillDamageBonus = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.DamageBonus.SkillDamageBonus"), FString(TEXT("技能伤害加成")));
+
+	
+	//Input
+	GameplayTags.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag_LMB"), FString(TEXT("鼠标左键")));
+	GameplayTags.InputTag_RMB = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("InputTag_RMB"), FString(TEXT("鼠标右键")));
+	GameplayTags.InputTag_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag_1"), FString(TEXT("数字1")));
+	GameplayTags.InputTag_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag_2"), FString(TEXT("数字2")));
+	GameplayTags.InputTag_3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag_3"), FString(TEXT("数字3")));
+	GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag_4"), FString(TEXT("数字4")));
 }

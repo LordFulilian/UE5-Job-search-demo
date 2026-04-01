@@ -1,9 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// 请确保这里继承了你正确的父类，比如 ACharacterBase 或 ACharacter
 #include "Character/CharacterBase.h" 
 #include "InputActionValue.h"
+#include "GameplayTagContainer.h"
+#include "input/PlayerInputConfig.h"
 #include "PlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -57,14 +58,20 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* OpenPanelAction;
     UPROPERTY(EditAnywhere, Category = "Input")
-    UInputAction* LockAction; // ? 锁定按键
+    UInputAction* LockAction; // 
 
+    UPROPERTY(EditDefaultsOnly, Category = "Input")
+    TObjectPtr<UPlayerInputConfig> InputConfig;
     // --- 输入回调函数 ---
-    void Move(const FInputActionValue& Value);
+    void Move(const   FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
     void Zoom(const FInputActionValue& Value);
     void SprintStart();
     void SprintStop();
+    
+    void AbilityInputTagPressed(FGameplayTag InputTag);
+    void AbilityInputTagReleased(FGameplayTag InputTag);
+    void AbilityInputTagHeld(FGameplayTag InputTag);
     
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<class UUserWidget> CharacterPanelClass;

@@ -4,6 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h" 
+#include "input/PlayerInputComponent.h"
 
 AOnePlayerController::AOnePlayerController()
 {
@@ -49,6 +50,11 @@ void AOnePlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
+	
+	
+	
+	
+	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		// °ó¶¨ Alt ¼ü
@@ -78,3 +84,5 @@ void AOnePlayerController::BeginPlay()
 		}
 	}
 }
+
+

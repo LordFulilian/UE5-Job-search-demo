@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "input/PlayerInputConfig.h"
+#include "InputActionValue.h"
 #include "OnePlayerController.generated.h"
 
 class UInputMappingContext;
@@ -41,4 +43,10 @@ private:
 	// 【新增】鼠标左键动作
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ClickAction;
+	
+
+	
+	
+	
+	
 };

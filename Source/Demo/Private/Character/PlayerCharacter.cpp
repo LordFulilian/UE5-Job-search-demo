@@ -15,9 +15,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/HUD/PlayerHUD.h"
 #include "Blueprint/UserWidget.h"
-
-// 🔴 必须引入高亮接口 (路径请根据实际情况调整)
-#include "Interaction/EnemyInterface.h" 
+#include "input/PlayerInputComponent.h" // 确保路径正确
+#include "interaction/EnemyInterface.h" 
 
 void APlayerCharacter::OnRep_PlayerState()
 {
@@ -27,24 +26,21 @@ void APlayerCharacter::OnRep_PlayerState()
 
 APlayerCharacter::APlayerCharacter()
 {
-    // 设置角色的旋转逻辑 (二游经典设置)
+    // 设置角色的旋转逻辑 (二游经典设置：身体不随相机转，随移动方向转)
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
 
-    // 配置移动组件
     GetCharacterMovement()->bOrientRotationToMovement = true; 
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); 
     GetCharacterMovement()->JumpZVelocity = 700.f; 
     GetCharacterMovement()->AirControl = 0.35f;    
 
-    // 创建弹簧臂 (SpringArm)
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     CameraBoom->TargetArmLength = 400.0f; 
     CameraBoom->bUsePawnControlRotation = true; 
 
-    // 创建摄像机 (Camera)
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
     FollowCamera->bUsePawnControlRotation = false; 
@@ -84,8 +80,6 @@ void APlayerCharacter::InitAbilityActorInfo()
     AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
     AttributeSet = OPlayerState->GetAttributeSet();
     
-    // InitializeDefaultAttributes(); // 如果你在基类声明了它，取消注释即可
-    
     if (AOnePlayerController* OnePlayerController = Cast<AOnePlayerController>(GetController()))
     {
        if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(OnePlayerController->GetHUD()))
@@ -100,44 +94,49 @@ void APlayerCharacter::BeginPlay()
     Super::BeginPlay();
 }
 
+// ==========================================
+// 🔴 输入绑定核心逻辑 (已修复变量冲突)
+// ==========================================
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+    
+    // 1. 将名字改为 AuraInputComponent，避免与形参 PlayerInputComponent 重名
+    UPlayerInputComponent* AuraInputComponent = CastChecked<UPlayerInputComponent>(PlayerInputComponent);
 
-    if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+    // 2. 绑定 GAS 技能动作 (由 InputConfig 数据资产驱动)
+    if (InputConfig)
     {
-       if (MoveAction)
-          EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
-
-       if (LookAction)
-          EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
-
-       if (ZoomAction)
-          EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Zoom);
-
-       if (SprintAction)
-       {
-          EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SprintStart);
-          EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::SprintStop);
-       }
-
-       if (JumpAction)
-       {
-          EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-          EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-       }
-       
-       if (OpenPanelAction)
-       {
-          EnhancedInputComponent->BindAction(OpenPanelAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleOpenPanelAction);
-       }
-       
-       // 🔴 绑定锁定按键
-       if (LockAction)
-       {
-          EnhancedInputComponent->BindAction(LockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleLockOn);
-       }  
+        AuraInputComponent->BindAbilityAction(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
     }
+
+    // 3. 绑定基础动作
+    if (MoveAction)
+        AuraInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+
+    if (LookAction)
+        AuraInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+
+    if (ZoomAction)
+        AuraInputComponent->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Zoom);
+
+    if (SprintAction)
+    {
+        AuraInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SprintStart);
+        AuraInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::SprintStop);
+    }
+
+    if (JumpAction)
+    {
+        AuraInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+        AuraInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+    }
+    
+    if (OpenPanelAction)
+        AuraInputComponent->BindAction(OpenPanelAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleOpenPanelAction);
+          
+    if (LockAction)
+        AuraInputComponent->BindAction(LockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleLockOn);
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -159,11 +158,9 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
 {
-    // 🔴 如果硬锁定中，禁止鼠标晃动镜头
     if (bIsHardLocked) return;
     
     FVector2D LookAxisVector = Value.Get<FVector2D>();
-
     if (Controller != nullptr)
     {
        AddControllerYawInput(LookAxisVector.X);
@@ -174,7 +171,6 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 void APlayerCharacter::Zoom(const FInputActionValue& Value)
 {
     float ZoomValue = Value.Get<float>();
-
     if (CameraBoom)
     {
        const float MinDistance = 150.0f; 
@@ -188,17 +184,37 @@ void APlayerCharacter::Zoom(const FInputActionValue& Value)
 
 void APlayerCharacter::SprintStart()
 {
-    if (GetCharacterMovement())
-    {
-       GetCharacterMovement()->MaxWalkSpeed = 1000.f; 
-    }
+    if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = 1000.f; 
 }
 
 void APlayerCharacter::SprintStop()
 {
-    if (GetCharacterMovement())
+    if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = 400.f; 
+}
+
+// 🔴 这里需要调用 ASC 来响应输入标签
+void APlayerCharacter::AbilityInputTagPressed(FGameplayTag InputTag)
+{
+    if (GetAbilitySystemComponent())
     {
-       GetCharacterMovement()->MaxWalkSpeed = 400.f; 
+        // 调用你自定义 ASC 中的处理函数
+        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagPressed(InputTag);
+    }
+}
+
+void APlayerCharacter::AbilityInputTagReleased(FGameplayTag InputTag)
+{
+    if (GetAbilitySystemComponent())
+    {
+        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagReleased(InputTag);
+    }
+}
+
+void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
+{
+    if (GetAbilitySystemComponent())
+    {
+        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagHeld(InputTag);
     }
 }
 
@@ -210,7 +226,6 @@ void APlayerCharacter::ToggleOpenPanelAction()
     if (CharacterPanelInstance && CharacterPanelInstance->IsInViewport())
     {
        CharacterPanelInstance->RemoveFromParent();
-        
        FInputModeGameOnly InputMode;
        PC->SetInputMode(InputMode);
        PC->bShowMouseCursor = false;
@@ -222,11 +237,9 @@ void APlayerCharacter::ToggleOpenPanelAction()
        {
           CharacterPanelInstance = CreateWidget<UUserWidget>(PC, CharacterPanelClass);
        }
-
        if (CharacterPanelInstance)
        {
           CharacterPanelInstance->AddToViewport();
-            
           FInputModeGameAndUI InputMode;
           InputMode.SetWidgetToFocus(CharacterPanelInstance->TakeWidget()); 
           InputMode.SetHideCursorDuringCapture(false);
@@ -235,11 +248,9 @@ void APlayerCharacter::ToggleOpenPanelAction()
           PC->SetPause(true); 
        }
     }
-} // 🔴 修复点：正确闭合函数
+}
 
-// ==========================================
-// 🔴 锁定系统实现
-// ==========================================
+// --- 锁定系统 ---
 
 AActor* APlayerCharacter::FindBestTarget()
 {
@@ -247,41 +258,29 @@ AActor* APlayerCharacter::FindBestTarget()
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(this);
 
-    // 球体检测，寻找前方敌人
     UKismetSystemLibrary::SphereOverlapActors(
-        this, 
-        GetActorLocation(), 
-        LockTargetRadius, 
+        this, GetActorLocation(), LockTargetRadius, 
         TArray<TEnumAsByte<EObjectTypeQuery>>{ UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn) },
-        AActor::StaticClass(), 
-        ActorsToIgnore, 
-        OverlappingActors
+        AActor::StaticClass(), ActorsToIgnore, OverlappingActors
     );
 
     AActor* BestTarget = nullptr;
     float HighestScore = -1.f; 
-
     FVector CameraLocation = FollowCamera->GetComponentLocation();
     FVector CameraForward = FollowCamera->GetForwardVector();
 
     for (AActor* Actor : OverlappingActors)
     {
-        // 确保找到了实现了接口的敌人
         if (!Actor->Implements<UEnemyInterface>()) continue;
-
         FVector DirToTarget = (Actor->GetActorLocation() - CameraLocation).GetSafeNormal();
         float DotProduct = FVector::DotProduct(CameraForward, DirToTarget);
 
-        if (DotProduct > 0.6f) 
+        if (DotProduct > 0.6f && DotProduct > HighestScore)
         {
-            if (DotProduct > HighestScore)
-            {
-                HighestScore = DotProduct;
-                BestTarget = Actor;
-            }
+            HighestScore = DotProduct;
+            BestTarget = Actor;
         }
     }
-
     return BestTarget;
 }
 
@@ -289,37 +288,20 @@ void APlayerCharacter::ToggleLockOn()
 {
     if (bIsHardLocked && LockedTarget)
     {
-        // === 取消锁定 ===
         bIsHardLocked = false;
-    
-        // 传入 false 关闭高亮
-        if (LockedTarget->Implements<UEnemyInterface>())
-        {
-            IEnemyInterface::Execute_ToggleHighlight(LockedTarget, false);
-        }
-    
+        if (LockedTarget->Implements<UEnemyInterface>()) IEnemyInterface::Execute_ToggleHighlight(LockedTarget, false);
         LockedTarget = nullptr;
-
-        // 恢复自由视角移动模式
         GetCharacterMovement()->bOrientRotationToMovement = true; 
         bUseControllerRotationYaw = false; 
     }
     else
     {
-        // === 尝试锁定 ===
         AActor* TargetToLock = FindBestTarget();
         if (TargetToLock)
         {
             LockedTarget = TargetToLock;
             bIsHardLocked = true;
-
-            // 传入 true 开启高亮
-            if (LockedTarget->Implements<UEnemyInterface>())
-            {
-                IEnemyInterface::Execute_ToggleHighlight(LockedTarget, true);
-            }
-
-            // 切换战斗环绕移动模式
+            if (LockedTarget->Implements<UEnemyInterface>()) IEnemyInterface::Execute_ToggleHighlight(LockedTarget, true);
             GetCharacterMovement()->bOrientRotationToMovement = false; 
             bUseControllerRotationYaw = true; 
         }
@@ -330,27 +312,18 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // 如果在锁定状态，强制接管摄像机旋转看向敌人
-    if (bIsHardLocked)
+    if (bIsHardLocked && IsValid(LockedTarget))
     {
-        if (IsValid(LockedTarget))
-        {
-            FVector TargetLocation = LockedTarget->GetActorLocation();
-            TargetLocation.Z -= 50.f; // 下移防止看天
-
-            FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLocation);
-            FRotator CurrentRotation = Controller->GetControlRotation();
-
-            // 平滑插值转动镜头
-            FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, LookAtRotation, DeltaTime, 8.0f);
-            SmoothedRotation.Roll = 0.f;
-
-            Controller->SetControlRotation(SmoothedRotation);
-        }
-        else
-        {
-            // 目标失效(例如死亡被销毁)，解除锁定
-            ToggleLockOn();
-        }
+        FVector TargetLocation = LockedTarget->GetActorLocation();
+        TargetLocation.Z -= 50.f; 
+        FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLocation);
+        FRotator CurrentRotation = Controller->GetControlRotation();
+        FRotator SmoothedRotation = FMath::RInterpTo(CurrentRotation, LookAtRotation, DeltaTime, 8.0f);
+        SmoothedRotation.Roll = 0.f;
+        Controller->SetControlRotation(SmoothedRotation);
+    }
+    else if (bIsHardLocked)
+    {
+        ToggleLockOn();
     }
 }

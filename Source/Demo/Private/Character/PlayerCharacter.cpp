@@ -214,7 +214,7 @@ void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
 {
     if (GetAbilitySystemComponent())
     {
-        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagHeld(InputTag);
+        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagReleased(InputTag);
     }
 }
 

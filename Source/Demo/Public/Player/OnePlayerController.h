@@ -10,6 +10,8 @@
 
 class UInputMappingContext;
 class UInputAction;
+class UPlayerAbilitySystemComponent;
+
 
 UCLASS()
 class DEMO_API AOnePlayerController : public APlayerController
@@ -44,7 +46,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ClickAction;
 	
-
 	
 	
 	

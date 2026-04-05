@@ -1,10 +1,12 @@
 // OnePlayerController.cpp
 
 #include "Player/OnePlayerController.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "InputMappingContext.h" 
-#include "input/PlayerInputComponent.h"
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
+
 
 AOnePlayerController::AOnePlayerController()
 {
@@ -84,5 +86,7 @@ void AOnePlayerController::BeginPlay()
 		}
 	}
 }
+
+
 
 

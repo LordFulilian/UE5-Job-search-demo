@@ -19,11 +19,30 @@ void UPlayerAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclass
 		 FGameplayAbilitySpec AbilitySpec =  FGameplayAbilitySpec(AbilityClass,1);
 		 if (const UPlayerGameplayAbility* PlayerAbility = Cast<UPlayerGameplayAbility>(AbilitySpec.Ability))
 		 {
-			 AbilitySpec.DynamicAbilityTags.AddTag(PlayerAbility->StartupInputTag);
+		 	AbilitySpec.GetDynamicSpecSourceTags().AddTag(PlayerAbility->StartupInputTag);
 		 	GiveAbility(AbilitySpec);
 		 }
 		
 		
+	}
+}
+
+void UPlayerAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
+{
+	if (!InputTag.IsValid()) return;
+
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
+		{
+			AbilitySpecInputPressed(AbilitySpec);
+            
+			
+			if (!AbilitySpec.IsActive())
+			{
+				TryActivateAbility(AbilitySpec.Handle);
+			}
+		}
 	}
 }
 
@@ -32,7 +51,7 @@ void UPlayerAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& Inpu
 	if(!InputTag.IsValid()) return;
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
 			AbilitySpecInputPressed(AbilitySpec);
 			if (!AbilitySpec.IsActive())
@@ -43,15 +62,14 @@ void UPlayerAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& Inpu
 	}
 }
 
-void UPlayerAbilitySystemComponent::AbilityInputReleased(const FGameplayTag& InputTag)
+void UPlayerAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
 {
 	if(!InputTag.IsValid()) return;
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 		{
 			AbilitySpecInputReleased(AbilitySpec);
-			
 		}
 	}
 }

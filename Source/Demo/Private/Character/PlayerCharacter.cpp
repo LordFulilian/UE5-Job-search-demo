@@ -55,6 +55,7 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 void APlayerCharacter::OnRep_Controller()
 {
     Super::OnRep_Controller();
+    InitAbilityActorInfo();
 }
 
 UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
@@ -80,12 +81,25 @@ void APlayerCharacter::InitAbilityActorInfo()
     AbilitySystemComponent = OPlayerState->GetAbilitySystemComponent();
     AttributeSet = OPlayerState->GetAttributeSet();
     
+    // ==========================================
+    // 🔴 修复点 1：初始化属性 (让血条和攻击力变成非 0)
+    // ==========================================
+    InitializeDefaultAttributes(); 
+    
+    // ==========================================
+    // 🔴 修复点 2：赋予初始技能 (让左键平A生效)
+    // ==========================================
+    if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent))
+    {
+        PlayerASC->AddCharacterAbilities(StartupAbilities); 
+    }
+
     if (AOnePlayerController* OnePlayerController = Cast<AOnePlayerController>(GetController()))
     {
-       if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(OnePlayerController->GetHUD()))
-       {
-          PlayerHUD->InitOverlay(OnePlayerController, OPlayerState, AbilitySystemComponent, AttributeSet);
-       }
+        if (APlayerHUD* PlayerHUD = Cast<APlayerHUD>(OnePlayerController->GetHUD()))
+        {
+            PlayerHUD->InitOverlay(OnePlayerController, OPlayerState, AbilitySystemComponent, AttributeSet);
+        }
     }
 }
 
@@ -195,26 +209,25 @@ void APlayerCharacter::SprintStop()
 // 🔴 这里需要调用 ASC 来响应输入标签
 void APlayerCharacter::AbilityInputTagPressed(FGameplayTag InputTag)
 {
-    if (GetAbilitySystemComponent())
+    if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(GetAbilitySystemComponent()))
     {
-        // 调用你自定义 ASC 中的处理函数
-        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagPressed(InputTag);
+        PlayerASC->AbilityInputTagPressed(InputTag); // 这里会去调用 TryActivateAbility 触发平A！
     }
 }
 
 void APlayerCharacter::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-    if (GetAbilitySystemComponent())
+    if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(GetAbilitySystemComponent()))
     {
-        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagReleased(InputTag);
+        PlayerASC->AbilityInputTagReleased(InputTag);
     }
 }
 
 void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
 {
-    if (GetAbilitySystemComponent())
+    if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(GetAbilitySystemComponent()))
     {
-        // Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityInputTagReleased(InputTag);
+        PlayerASC->AbilityInputTagHeld(InputTag); // 修复了原本代码这里的笔误
     }
 }
 

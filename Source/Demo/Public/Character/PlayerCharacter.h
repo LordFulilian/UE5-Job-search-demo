@@ -74,8 +74,7 @@ protected:
     void AbilityInputTagHeld(FGameplayTag InputTag);
     
     UPROPERTY(EditAnywhere, Category = "UI")
-    TSubclassOf<class UUserWidget> CharacterPanelClass;
- 
+    TSubclassOf< UUserWidget> CharacterPanelClass;
  
 
     // ==========================================

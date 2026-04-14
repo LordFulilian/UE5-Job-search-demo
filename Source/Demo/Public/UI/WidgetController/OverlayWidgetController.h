@@ -52,6 +52,8 @@ public:
 	UPROPERTY(BlueprintAssignable,Category="GAS|Message")
 	FMessageWidgetRowSignature MessageWidgetRowDelegate;
 	
+	
+	
 protected:
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Widget Data")

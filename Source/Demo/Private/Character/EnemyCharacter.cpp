@@ -3,6 +3,7 @@
 #include "Character/EnemyCharacter.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
+#include "Chaos/Deformable/MuscleActivationConstraints.h"
 #include "Components/MeshComponent.h"
 
 AEnemyCharacter::AEnemyCharacter()
@@ -14,6 +15,9 @@ AEnemyCharacter::AEnemyCharacter()
 
 	// 构建属性集
 	AttributeSet = CreateDefaultSubobject<UPlayerAttributeSet>(TEXT("AttributeSet"));
+	
+	HealthBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+	HealthBar->SetupAttachment(GetRootComponent());
 }
 
 // 
@@ -43,12 +47,37 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InitAbilityActorInfo();
+
+	if (UPlayerUserWidget * PlayerUserWidget= Cast<UPlayerUserWidget>(HealthBar->GetUserWidgetObject()))
+	{
+		PlayerUserWidget->SetWidgetController(this);
+	}
+	if (const UPlayerAttributeSet *PlayerAS= Cast<UPlayerAttributeSet>(AttributeSet))
+	{
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAS->GetHealthAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				OnHealthChanged.Broadcast(Data.NewValue);
+			}
+	);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAS->GetMaxHealthAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				OnMaxHealthChanged.Broadcast(Data.NewValue);
+			}
+		);
+		
+		OnHealthChanged.Broadcast(PlayerAS->GetHealth());
+		OnMaxHealthChanged.Broadcast(PlayerAS->GetMaxHealth());
+	}
 }
 
 void AEnemyCharacter::InitAbilityActorInfo()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
+	
+	InitializeDefaultAttributes();
 }
 
 int32 AEnemyCharacter::GetPlayerLevel()

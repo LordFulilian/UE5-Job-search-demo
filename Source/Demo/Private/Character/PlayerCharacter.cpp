@@ -155,6 +155,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
+    if (GetAbilitySystemComponent() && GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Attacking"))))
+    {
+        return;
+    }
     FVector2D MovementVector = Value.Get<FVector2D>();
 
     if (Controller != nullptr)
@@ -227,7 +231,7 @@ void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
 {
     if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(GetAbilitySystemComponent()))
     {
-        PlayerASC->AbilityInputTagHeld(InputTag); // 修复了原本代码这里的笔误
+        PlayerASC->AbilityInputTagHeld(InputTag); 
     }
 }
 

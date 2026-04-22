@@ -31,7 +31,9 @@ protected:
 	
 	UFUNCTION()
 	void OnHitEventReceived(FGameplayEventData Payload);
-
+	
+	UPROPERTY(EditDefaultsOnly, Category ="Damage")
+	FScalableFloat Damage;
 	// 🔴 之前写的射线检测与伤害应用函数
 	void PerformMeleeTraceAndApplyDamage();
     

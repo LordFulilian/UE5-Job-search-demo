@@ -3,6 +3,7 @@
 #include "Character/EnemyCharacter.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
+#include "AbilitySystem/PlayerAbilitySystemLibrary.h"
 #include "Chaos/Deformable/MuscleActivationConstraints.h"
 #include "Components/MeshComponent.h"
 
@@ -44,43 +45,78 @@ void AEnemyCharacter::ToggleHighlight_Implementation(bool bActive)
 	}
 }
 void AEnemyCharacter::BeginPlay()
+
 {
+
 	Super::BeginPlay();
+
 	InitAbilityActorInfo();
 
-	if (UPlayerUserWidget * PlayerUserWidget= Cast<UPlayerUserWidget>(HealthBar->GetUserWidgetObject()))
-	{
-		PlayerUserWidget->SetWidgetController(this);
-	}
-	if (const UPlayerAttributeSet *PlayerAS= Cast<UPlayerAttributeSet>(AttributeSet))
-	{
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAS->GetHealthAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnHealthChanged.Broadcast(Data.NewValue);
-			}
-	);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAS->GetMaxHealthAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnMaxHealthChanged.Broadcast(Data.NewValue);
-			}
-		);
-		
-		OnHealthChanged.Broadcast(PlayerAS->GetHealth());
-		OnMaxHealthChanged.Broadcast(PlayerAS->GetMaxHealth());
-	}
-}
 
+	HealthBar->InitWidget();
+
+
+
+	if (UPlayerUserWidget * PlayerUserWidget= Cast<UPlayerUserWidget>(HealthBar->GetUserWidgetObject()))
+
+	{
+
+		PlayerUserWidget->SetWidgetController(this);
+
+	}
+
+	if (const UPlayerAttributeSet *PlayerAS= Cast<UPlayerAttributeSet>(AttributeSet))
+
+	{
+
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAS->GetHealthAttribute()).AddLambda(
+
+		[this](const FOnAttributeChangeData& Data)
+
+		{
+
+		OnHealthChanged.Broadcast(Data.NewValue);
+
+		}
+
+		);
+
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAS->GetMaxHealthAttribute()).AddLambda(
+
+		[this](const FOnAttributeChangeData& Data)
+
+		{
+
+		OnMaxHealthChanged.Broadcast(Data.NewValue);
+
+		}
+
+		);
+
+
+		OnHealthChanged.Broadcast(PlayerAS->GetHealth());
+
+		OnMaxHealthChanged.Broadcast(PlayerAS->GetMaxHealth());
+
+	}
+
+}
 void AEnemyCharacter::InitAbilityActorInfo()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 	
-	InitializeDefaultAttributes();
+	InitialzeDefaultAttributes();
 }
 
 int32 AEnemyCharacter::GetPlayerLevel()
 {
 	return Level;
 }
+
+void AEnemyCharacter::InitialzeDefaultAttributes() 
+{
+	UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(this,CharacterClass,Level,AbilitySystemComponent);
+}
+
+

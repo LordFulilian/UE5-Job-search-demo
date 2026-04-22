@@ -51,12 +51,14 @@ void ACharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffe
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data,GetAbilitySystemComponent());
 }
 
-void ACharacterBase::InitializeDefaultAttributes() 
+void ACharacterBase::InitialzeDefaultAttributes() 
 {
 	float CharacterLevel = static_cast<float>(GetPlayerLevel());
 	ApplyEffectToSelf(DefaultPrimaryAttributes,CharacterLevel);
 	ApplyEffectToSelf(DefaultSecondaryAttributes,CharacterLevel);
 }
+
+
 
 void ACharacterBase::AddCharacterAbilities()
 {

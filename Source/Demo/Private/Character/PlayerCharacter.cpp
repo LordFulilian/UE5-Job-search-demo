@@ -84,7 +84,7 @@ void APlayerCharacter::InitAbilityActorInfo()
     // ==========================================
     // 🔴 修复点 1：初始化属性 (让血条和攻击力变成非 0)
     // ==========================================
-    InitializeDefaultAttributes(); 
+   InitialzeDefaultAttributes(); 
     
     // ==========================================
     // 🔴 修复点 2：赋予初始技能 (让左键平A生效)

@@ -5,7 +5,9 @@
 #include "AbilitySystemComponent.h"
 #include "Engine/World.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
-#include "DrawDebugHelpers.h" // 添加这个头文件以支持 DrawDebugSphere
+#include "DrawDebugHelpers.h" 
+#include "PlayerGameplayTags.h"
+
 
 UPlayerMeleeAttack::UPlayerMeleeAttack()
 {
@@ -133,25 +135,18 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
        EffectContext.AddHitResult(HitResult);
        FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContext);
 
-       // 🔴 核心：捕获 GE 的应用结果
-       FActiveGameplayEffectHandle ActiveHandle = SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
-
-       // 诊断 3：分析应用结果
-       if (ActiveHandle.WasSuccessfullyApplied())
-       {
-           float NewHealth = TargetASC->GetGameplayAttributeValue(UPlayerAttributeSet::GetHealthAttribute(), bFoundHealth);
-           if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("✅ 成功！扣血前: %.1f, 扣血后: %.1f"), OldHealth, NewHealth));
-       }
-       else
-       {
-           if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Red, TEXT("❌ 失败：GE 被引擎拦截，无法应用！"));
+    	// 🟢 在这里注入 SetByCaller 的动态伤害值！
+    	if (SpecHandle.IsValid())
+    	{
+    		// 1. 拿到你的 GameplayTags 单例 (确保名字和你的项目一致)
+    		FPlayerGameplayTags GameplayTags = FPlayerGameplayTags::Get(); 
            
-           // 诊断 4：是不是网络权限惹的祸？
-           if (!AvatarActor->HasAuthority())
-           {
-               if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Yellow, TEXT("⚠️ 原因找到：你当前是【客户端(Client)】。GAS 规定客户端无权扣血，必须在服务器执行！"));
-           }
+    	const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
+    		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage, ScaledDamage);
+
+    		// 3. 🔴 核心：带着塞好数字的句柄，狠狠地打在敌人身上！(这一步必须放在最后)
+    		FActiveGameplayEffectHandle ActiveHandle = SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+    	}
        }
     }
     
-}

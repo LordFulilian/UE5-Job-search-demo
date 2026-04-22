@@ -17,4 +17,6 @@ class DEMO_API UPlayerGameplayAbility : public UGameplayAbility
 public:
 		UPROPERTY(EditDefaultsOnly, Category ="Input")
 	FGameplayTag StartupInputTag;
+	
+	
 };

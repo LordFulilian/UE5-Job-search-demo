@@ -125,6 +125,12 @@ public:
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, SkillDamageBonus);
 
 
+    
+    UPROPERTY(BlueprintReadOnly,Category="Meta Attributes")
+    FGameplayAttributeData IncomingDamage;
+    ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, IncomingDamage);
+    
+    
     /*
      * ==========================================================
      * 网络同步回调函数 (Replication Notifies)

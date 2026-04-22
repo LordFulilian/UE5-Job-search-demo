@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "PlayerGameModeBase.generated.h"
 
+class UCharacterClassInfo;
 /**
  * 
  */
@@ -14,4 +15,7 @@ class DEMO_API APlayerGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(EditDefaultsOnly,Category="Character Class Defaults")
+	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 };

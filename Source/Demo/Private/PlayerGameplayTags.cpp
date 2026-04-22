@@ -50,4 +50,7 @@ void FPlayerGameplayTags::InitializeNativeGameplayTags()
 		FName("InputTag_3"), FString(TEXT("数字3")));
 	GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("InputTag_4"), FString(TEXT("数字4")));
+	
+	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Damage"), FString(TEXT("Damage")));
 }

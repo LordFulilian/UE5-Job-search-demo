@@ -7,7 +7,10 @@
 #include "Components/WidgetComponent.h"
 #include "interaction/EnemyInterface.h" 
 #include "UI/WidgetController/OverlayWidgetController.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "EnemyCharacter.generated.h"
+
+
 class UUserWidget;
 /**
  * 敌人角色类
@@ -34,9 +37,13 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
 	virtual int32 GetPlayerLevel() override;
+	virtual  void InitialzeDefaultAttributes()  override;
     
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults")
 	int32 Level = 1;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults")
+	ECharacterClass CharacterClass = ECharacterClass::longsword;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UWidgetComponent> HealthBar;

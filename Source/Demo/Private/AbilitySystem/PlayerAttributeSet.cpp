@@ -80,7 +80,6 @@ void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCal
     
     if (IsValid(Props.SourceASC) && Props.SourceASC->AbilityActorInfo.IsValid())
     {
-       // 【已修复】直接赋值给 Props 里的变量，而不是声明局部临时变量
        Props.SourceAvatarActor = Props.SourceASC->AbilityActorInfo->AvatarActor.Get();
        Props.SourceController = Props.SourceASC->AbilityActorInfo->PlayerController.Get();
        
@@ -110,7 +109,24 @@ void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCal
 void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-    
-	FEffectProperties Props;
-	SetEffectProperties(Data, Props);
+   if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
+   {
+      // 1. 把暂存篮子里的伤害值拿出来
+      const float LocalIncomingDamage = GetIncomingDamage();
+        
+      // 2. 极其重要：立刻清空篮子！如果不清零，下次挨打伤害会无限叠加
+      SetIncomingDamage(0.f);
+
+      // 3. 真正执行扣血逻辑
+      if (LocalIncomingDamage > 0.f)
+      {
+         // 当前血量减去伤害
+         const float NewHealth = GetHealth() - LocalIncomingDamage;
+            
+         // 设置新血量（用 Clamp 保证血量不会扣成负数，也不会超过最大血量）
+         SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+         
+       
+      }
+   }
 }

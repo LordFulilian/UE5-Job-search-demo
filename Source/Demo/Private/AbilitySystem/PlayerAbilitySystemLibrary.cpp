@@ -70,3 +70,16 @@ void UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(const UObject* Worl
 	const FGameplayEffectSpecHandle VitalAttributesSpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->VitalAttributes,Level,VitalAttributesContextHandle);
 	ASC->ApplyGameplayEffectSpecToSelf(*VitalAttributesSpecHandle.Data.Get());
 }
+
+void UPlayerAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
+{
+	APlayerGameModeBase *PlayerGameMode = Cast<APlayerGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (PlayerGameMode == nullptr)return;
+	
+	UCharacterClassInfo* CharacterClassInfo = PlayerGameMode->CharacterClassInfo;
+	for (TSubclassOf<UGameplayAbility>AbilityClass : CharacterClassInfo->CommonAbilites)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass,1);
+		ASC->GiveAbility(AbilitySpec);
+	}
+}

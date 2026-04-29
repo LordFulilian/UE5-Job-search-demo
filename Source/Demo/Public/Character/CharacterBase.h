@@ -12,6 +12,7 @@
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayEffect;
+class UAnimMontage;
 
 UCLASS(Abstract)
 class DEMO_API ACharacterBase : public ACharacter, public IAbilitySystemInterface,public ICombatInterface
@@ -24,6 +25,12 @@ public:
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 	virtual  int32 GetPlayerLevel() override;
+	virtual UAnimMontage * GetHitReactMontage_Implementation() override;
+	
+	virtual void Die() override;
+	
+	UFUNCTION(NetMulticast,Reliable)
+	virtual void MulticasHamdleDeath();
 protected:
 	virtual void BeginPlay() override;
 	
@@ -58,6 +65,6 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 private:
 	
-	
-
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TObjectPtr<UAnimMontage> HitReactAnimMontage;
 };

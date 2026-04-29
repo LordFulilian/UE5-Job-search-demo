@@ -8,6 +8,7 @@
 #include "InputActionValue.h"
 #include "OnePlayerController.generated.h"
 
+class UDamageTextComponent;
 class UInputMappingContext;
 class UInputAction;
 class UPlayerAbilitySystemComponent;
@@ -28,7 +29,10 @@ public:
 	void OnClickScreen();
 
 	virtual void SetupInputComponent() override;
-
+	
+	
+	UFUNCTION(Client,Reliable)
+	void ShowDamageNumber(float DamageAmount,ACharacter* TargetCharacter);
 protected:
 	virtual void BeginPlay() override;
 
@@ -47,6 +51,8 @@ private:
 	TObjectPtr<UInputAction> ClickAction;
 	
 	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UDamageTextComponent>DamageTextComponentClass;
 	
 	
 	

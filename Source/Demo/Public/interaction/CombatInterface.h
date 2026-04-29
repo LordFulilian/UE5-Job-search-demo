@@ -12,7 +12,7 @@ class UCombatInterface : public UInterface
 {
 	GENERATED_BODY()
 };
-
+class UAnimMontage;
 /**
  * 
  */
@@ -21,6 +21,12 @@ class DEMO_API ICombatInterface
 	GENERATED_BODY()
 
 	
+	
 public:
 	virtual int32 GetPlayerLevel();
+	
+	UFUNCTION(BlueprintNativeEvent,BlueprintCallable)
+	UAnimMontage* GetHitReactMontage();
+	
+	virtual  void Die() = 0;
 };

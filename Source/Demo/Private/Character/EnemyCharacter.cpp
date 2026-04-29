@@ -4,8 +4,9 @@
 #include "AbilitySystem/PlayerAttributeSet.h"
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAbilitySystemLibrary.h"
-#include "Chaos/Deformable/MuscleActivationConstraints.h"
+#include "PlayerGameplayTags.h"
 #include "Components/MeshComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -44,14 +45,24 @@ void AEnemyCharacter::ToggleHighlight_Implementation(bool bActive)
 		}
 	}
 }
+
+void AEnemyCharacter::Die()
+{
+	SetLifeSpan(LifeSpan);
+	Super::Die();
+	
+}
+
+
 void AEnemyCharacter::BeginPlay()
 
 {
 
 	Super::BeginPlay();
-
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	InitAbilityActorInfo();
 
+	UPlayerAbilitySystemLibrary::GiveStartupAbilities(this,AbilitySystemComponent);
 
 	HealthBar->InitWidget();
 
@@ -92,7 +103,10 @@ void AEnemyCharacter::BeginPlay()
 		}
 
 		);
-
+		AbilitySystemComponent->RegisterGameplayTagEvent(FPlayerGameplayTags::Get().Effects_Hit_react,EGameplayTagEventType::NewOrRemoved).AddUObject(
+		this,
+		&AEnemyCharacter::HitReactTagChange
+		);
 
 		OnHealthChanged.Broadcast(PlayerAS->GetHealth());
 
@@ -101,6 +115,12 @@ void AEnemyCharacter::BeginPlay()
 	}
 
 }
+void AEnemyCharacter::HitReactTagChange(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	bHitReacting = NewCount > 0;
+	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f: BaseWalkSpeed;
+}
+
 void AEnemyCharacter::InitAbilityActorInfo()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);

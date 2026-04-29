@@ -27,11 +27,25 @@ public:
 	
 	virtual void ToggleHighlight_Implementation(bool bActive) override;
 	
+	virtual void Die() override;
+	
 	UPROPERTY(BlueprintAssignable)
 	FOnAttributeChangedSinature OnHealthChanged;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnAttributeChangedSinature OnMaxHealthChanged;
+	
+	void HitReactTagChange(const FGameplayTag CallbackTag,int32 NewCount);
+	
+	UPROPERTY(BlueprintReadOnly,Category = "Combat")
+	bool bHitReacting = false;
+	
+	UPROPERTY(BlueprintReadOnly,Category = "Combat")
+	float BaseWalkSpeed = 300.0f;	
+	
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Combat")
+	float LifeSpan= 5.f;	
 	
 protected:
 	virtual void BeginPlay() override;

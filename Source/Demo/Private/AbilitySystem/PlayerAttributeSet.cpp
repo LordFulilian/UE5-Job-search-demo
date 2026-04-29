@@ -2,7 +2,11 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h" 
+#include "PlayerGameplayTags.h"
 #include "GameFramework/Character.h"
+#include "interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/OnePlayerController.h"
 
 UPlayerAttributeSet::UPlayerAttributeSet()
 {
@@ -106,27 +110,57 @@ void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCal
     }
 }
 
+
+
 void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
-	Super::PostGameplayEffectExecute(Data);
+   Super::PostGameplayEffectExecute(Data);
+   
+   FEffectProperties Props;
+   SetEffectProperties(Data, Props);
+
    if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
    {
       // 1. 把暂存篮子里的伤害值拿出来
       const float LocalIncomingDamage = GetIncomingDamage();
         
-      // 2. 极其重要：立刻清空篮子！如果不清零，下次挨打伤害会无限叠加
+      // 2. 立刻清空篮子
       SetIncomingDamage(0.f);
 
-      // 3. 真正执行扣血逻辑
+      // 3. 执行扣血逻辑
       if (LocalIncomingDamage > 0.f)
       {
-         // 当前血量减去伤害
          const float NewHealth = GetHealth() - LocalIncomingDamage;
-            
-         // 设置新血量（用 Clamp 保证血量不会扣成负数，也不会超过最大血量）
          SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
          
-       
+         const bool bFatal = NewHealth <= 0.f;
+         
+         if (bFatal)
+         {
+            ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor);
+            if (CombatInterface)
+            {
+               CombatInterface->Die();
+            }
+         }
+         else
+         {
+            FGameplayTagContainer TagContainer;
+            TagContainer.AddTag(FPlayerGameplayTags::Get().Effects_Hit_react);
+            Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+         }
+         
+         ShowFloatingText(Props,LocalIncomingDamage);
+      }
+   }
+}
+void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage)const
+{
+   if (Props.SourceCharacter != Props.TargetCharacter)
+   {
+      if (AOnePlayerController* PC = Cast<AOnePlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter,0)))
+      {
+         PC->ShowDamageNumber(Damage,Props.TargetCharacter);
       }
    }
 }

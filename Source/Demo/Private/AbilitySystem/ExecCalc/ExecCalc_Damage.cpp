@@ -2,15 +2,18 @@
 
 #include "AbilitySystem/ExecCalc/ExecCalc_Damage.h"
 #include "AbilitySystemComponent.h"
+#include "PlayerAbilityTypes.h"
 #include "PlayerGameplayTags.h"
+#include "AbilitySystem/PlayerAbilitySystemLibrary.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "interaction/CombatInterface.h"
 
 struct PlayerDamageStatics
 {
     DECLARE_ATTRIBUTE_CAPTUREDEF(Defense);
     DECLARE_ATTRIBUTE_CAPTUREDEF(Attack);
     DECLARE_ATTRIBUTE_CAPTUREDEF(CritRate);
-    // 🔴 修复 1：补上暴击伤害的声明
     DECLARE_ATTRIBUTE_CAPTUREDEF(CritDamage); 
     
     PlayerDamageStatics()
@@ -18,7 +21,6 @@ struct PlayerDamageStatics
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, Defense, Target, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, Attack, Source, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, CritRate, Source, false);
-       // 🔴 修复 1：补上暴击伤害的宏定义 (暴击伤害也是攻击者的，所以是 Source)
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, CritDamage, Source, false); 
     }
 };
@@ -43,8 +45,12 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     const UAbilitySystemComponent* SourceASC = ExecutionParams.GetSourceAbilitySystemComponent();
     const UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
     
-    const AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
-    const AActor* TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
+    AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+    AActor* TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
+    
+    // 安全获取 Combat Interface
+    ICombatInterface* SourceCombatInterface = Cast<ICombatInterface>(SourceAvatar);
+    ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(TargetAvatar);
     
     const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
     const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
@@ -64,7 +70,6 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     
     // 3. 抓取攻击力 (Source)
     float Attack = 0.f;
-    // 🔴 修复 2：最后一个参数改回 Attack，不再覆盖 Defense
     ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().AttackDef, EvaluateParameters, Attack);
     Attack = FMath::Max<float>(0.f, Attack);
     
@@ -76,29 +81,49 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     // 5. 初步融合：总伤害 = 基础伤害 + 面板攻击力
     float TotalDamage = BaseDamage + Attack;
     
-    // 6. 暴击判定
+    // 6. 动态读取护甲系数 (安全检查防止指针崩溃)
+    float DefenseCoefficient = 100.f; // 默认保底值
+    if (SourceAvatar && SourceCombatInterface)
+    {
+        UCharacterClassInfo* CharacterClassInfo = UPlayerAbilitySystemLibrary::GetCharacterClassInfo(SourceAvatar);
+        if (CharacterClassInfo && CharacterClassInfo->DamageCalculationCoefficients)
+        {
+            FRealCurve* DefenseCurve = CharacterClassInfo->DamageCalculationCoefficients->FindCurve(FName("DefenseCoefficient"), FString());
+            if (DefenseCurve)
+            {
+                // 获取与攻击者等级匹配的护甲系数
+                DefenseCoefficient = DefenseCurve->Eval(SourceCombatInterface->GetPlayerLevel());
+            }
+        }
+    }
+    
+    // 7. 暴击判定
     const bool bCriticalHit = FMath::RandRange(0.f, 100.f) < CritRate;
+    FGameplayEffectContextHandle EffectContextHandle = Spec.GetContext();
+    FGameplayEffectContext* Context = EffectContextHandle.Get();
+    FPlayerGamePlayEffectContext* PlayerContext = static_cast<FPlayerGamePlayEffectContext*>(Context);
+    PlayerContext->SetIsCriticalHit(bCriticalHit);
+    
     if (bCriticalHit)
     {
         float CritDamage = 0.f;
         ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CritDamageDef, EvaluateParameters, CritDamage);
-        CritDamage = FMath::Max<float>(1.f, CritDamage); // 保底是 1 倍
+        CritDamage = FMath::Max<float>(1.f, CritDamage); // 保底倍率为 1.0
        
-        // 直接乘！不除以 100 了
+        // 执行暴击翻倍
         TotalDamage *= CritDamage; 
     }
     
-    // 7. 执行减伤公式
+    // 8. 执行减伤公式 (使用动态读取的 DefenseCoefficient)
     if (Defense > 0.f)
     {
-       // 🔴 修复 4：用 TotalDamage 进行运算，不再用 BaseDamage
-       TotalDamage *= (100.f / (100.f + Defense));
+       TotalDamage *= (DefenseCoefficient / (DefenseCoefficient + Defense));
     }
     
-    // 8. 输出最终伤害
-    // 🔴 修复 4：把算好的 TotalDamage 塞进去
+    // 9. 构造修改器，输出最终伤害给 AttributeSet
     const FGameplayModifierEvaluatedData EvaluatedData(UPlayerAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, TotalDamage);
     OutExecutionOutput.AddOutputModifier(EvaluatedData);
-    // 在最后一行 OutExecutionOutput 之前加上：
-    UE_LOG(LogTemp, Warning, TEXT("【计算器生效了！】总算出的最终伤害是: %f"), TotalDamage);
+    
+    // 10. 调试日志：确认计算器正确执行
+    UE_LOG(LogTemp, Warning, TEXT("【GAS 伤害结算完毕】基础:%f, 攻击:%f, 暴击:%d, 防御:%f, 最终伤害:%f"), BaseDamage, Attack, bCriticalHit, Defense, TotalDamage);
 }

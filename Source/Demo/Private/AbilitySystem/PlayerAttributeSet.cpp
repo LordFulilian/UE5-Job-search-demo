@@ -3,6 +3,8 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h" 
 #include "PlayerGameplayTags.h"
+#include "AbilitySystem/PlayerAbilitySystemComponent.h"
+#include "AbilitySystem/PlayerAbilitySystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
@@ -150,17 +152,18 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
             Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
          }
          
-         ShowFloatingText(Props,LocalIncomingDamage);
+         const bool bCriticalHit = UPlayerAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+         ShowFloatingText(Props,LocalIncomingDamage,bCriticalHit);
       }
    }
 }
-void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage)const
+void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage,bool bCriticalHit)const
 {
    if (Props.SourceCharacter != Props.TargetCharacter)
    {
       if (AOnePlayerController* PC = Cast<AOnePlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter,0)))
       {
-         PC->ShowDamageNumber(Damage,Props.TargetCharacter);
+         PC->ShowDamageNumber(Damage,Props.TargetCharacter,bCriticalHit);
       }
    }
 }

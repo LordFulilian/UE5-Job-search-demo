@@ -28,5 +28,14 @@ public:
 	static  void InitialzeDefaultAttributes(const UObject* WorldContextObject,ECharacterClass CharacterClass ,float Level,UAbilitySystemComponent*ASC);
 	
 	UFUNCTION(BlueprintCallable,Category="PlayerAbilitySystemLibrary|CharacterClassDefaults")
-	static void GiveStartupAbilities(const UObject* WorldContextObject,UAbilitySystemComponent*ASC );	
+	static void GiveStartupAbilities(const UObject* WorldContextObject,UAbilitySystemComponent*ASC );
+
+	UFUNCTION(BlueprintCallable,Category="PlayerAbilitySystemLibrary|CharacterClassDefaults")
+	static UCharacterClassInfo* GetCharacterClassInfo(const UObject* WorldContextObject);
+	
+	UFUNCTION(BlueprintCallable,Category="PlayerAbilitySystemLibrary|GameplayEffects")
+	static bool IsCriticalHit(const FGameplayEffectContextHandle EffectContextHandle);
+	
+	UFUNCTION(BlueprintCallable,Category="PlayerAbilitySystemLibrary|GameplayEffects")
+	static  void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle EffectContextHandle,bool bInIsCriticalHit);
 };

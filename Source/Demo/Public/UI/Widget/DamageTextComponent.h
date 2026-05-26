@@ -17,5 +17,5 @@ class DEMO_API UDamageTextComponent : public UWidgetComponent
 	
 public:
 	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable)
-	void DamageText(float  Damage);
+	void DamageText(float  Damage,bool bCriticalHit);
 };

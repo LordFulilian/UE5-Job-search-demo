@@ -72,7 +72,7 @@ void AOnePlayerController::SetupInputComponent()
 	}
 }
 
-void AOnePlayerController::ShowDamageNumber_Implementation(float DamageAmount,ACharacter* TargetCharacter)
+void AOnePlayerController::ShowDamageNumber_Implementation(float DamageAmount,ACharacter* TargetCharacter,bool bCriticalHit)
 {
 	if (IsValid(TargetCharacter) && DamageTextComponentClass)
 	{
@@ -80,7 +80,7 @@ void AOnePlayerController::ShowDamageNumber_Implementation(float DamageAmount,AC
 		DamageText->RegisterComponent();
 		DamageText->AttachToComponent(TargetCharacter->GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
 		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-		DamageText->DamageText(DamageAmount);
+		DamageText->DamageText(DamageAmount,bCriticalHit);
 	}
 }
 

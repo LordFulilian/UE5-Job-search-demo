@@ -18,6 +18,11 @@ public:
 	FGameplayTag Attributes_Secondary_EnergyRegen;
 	FGameplayTag Attributes_DamageBonus_SkillDamageBonus;
 
+	FGameplayTag Attributes_Resistance_Fire;
+	FGameplayTag Attributes_Resistance_Physical;
+	FGameplayTag Attributes_Resistance_Ice;
+	
+	FGameplayTag Attributes_PlayerLevel;
 	//Input Tag
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
@@ -27,6 +32,11 @@ public:
 	FGameplayTag InputTag_4;
 
 	FGameplayTag Damage;
+	FGameplayTag Damage_Fire;
+	FGameplayTag Damage_Physical;
+	FGameplayTag Damage_Ice;
+	
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
 	
 	FGameplayTag Effects_Hit_react;
 	

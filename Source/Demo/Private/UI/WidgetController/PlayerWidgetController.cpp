@@ -2,6 +2,8 @@
 
 
 #include "UI/WidgetController/PlayerWidgetController.h"
+#include "Player/OPlayerState.h"
+#include "interaction/CombatInterface.h"
 
 void UPlayerWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WCParams)
 {
@@ -13,7 +15,13 @@ void UPlayerWidgetController::SetWidgetControllerParams(const FWidgetControllerP
 
 void UPlayerWidgetController::BroadcastInitialValues()
 {
-	
+	if (AOPlayerState* OPlayerState = Cast<AOPlayerState>(PlayerState))
+	{
+		const int32 CurrentLevel = OPlayerState->GetPlayerLevel();
+		// 向所有子类的 UI 发射等级数据！
+		OnPlayerLevelChanged.Broadcast(CurrentLevel);
+	}
+
 }
 
 void UPlayerWidgetController::BindCallbacksToDependencies()

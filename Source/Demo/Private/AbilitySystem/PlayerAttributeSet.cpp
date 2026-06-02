@@ -12,7 +12,29 @@
 
 UPlayerAttributeSet::UPlayerAttributeSet()
 {
-  
+    // 获取全局 Tag 单例
+    const FPlayerGameplayTags& GameplayTags = FPlayerGameplayTags::Get();
+
+    // 绑定核心生存属性
+    TagsToAttributes.Add(GameplayTags.Attributes_Vital_Health, GetHealthAttribute);
+    TagsToAttributes.Add(GameplayTags.Attributes_Vital_MaxHealth, GetMaxHealthAttribute);
+
+    // 绑定一级面板属性
+    TagsToAttributes.Add(GameplayTags.Attributes_Primary_Attack, GetAttackAttribute);
+    TagsToAttributes.Add(GameplayTags.Attributes_Primary_Defense, GetDefenseAttribute);
+
+    // 绑定二级进阶属性
+    TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritRate, GetCritRateAttribute);
+    TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritDamage, GetCritDamageAttribute);
+    TagsToAttributes.Add(GameplayTags.Attributes_Secondary_EnergyRegen, GetEnergyRegenAttribute);
+
+    // 绑定三级增伤属性
+    TagsToAttributes.Add(GameplayTags.Attributes_DamageBonus_SkillDamageBonus, GetSkillDamageBonusAttribute);
+
+    // 绑定抗性属性
+    TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Fire, GetFireResistanceAttribute);
+    TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Ice, GetIceResistanceAttribute);
+    TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Physical, GetPhysicalResistanceAttribute);
 }
 
 void UPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -34,6 +56,11 @@ void UPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
     
     // 三级增伤属性
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, SkillDamageBonus, COND_None, REPNOTIFY_Always);
+    
+    // 抗性 
+    DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, FireResistance, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, IceResistance, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, PhysicalResistance, COND_None, REPNOTIFY_Always);
 }
 
 void UPlayerAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -49,34 +76,57 @@ void UPlayerAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attri
 
 void UPlayerAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, Health, OldHealth);
 }
 
 void UPlayerAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, MaxHealth, OldMaxHealth);
 }
 
 void UPlayerAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, Attack, OldAttack);
 }
 
 void UPlayerAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldDefense) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, Defense, OldDefense);
 }
 
 void UPlayerAttributeSet::OnRep_CritRate(const FGameplayAttributeData& OldCritRate) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, CritRate, OldCritRate);
 }
 
 void UPlayerAttributeSet::OnRep_CritDamage(const FGameplayAttributeData& OldCritDamage) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, CritDamage, OldCritDamage);
 }
 
 void UPlayerAttributeSet::OnRep_EnergyRegen(const FGameplayAttributeData& OldEnergyRegen) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, EnergyRegen, OldEnergyRegen);
 }
 
 void UPlayerAttributeSet::OnRep_SkillDamageBonus(const FGameplayAttributeData& OldSkillDamageBonus) const
 {
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, SkillDamageBonus, OldSkillDamageBonus);
+}
+
+void UPlayerAttributeSet::OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, FireResistance, OldFireResistance);
+}
+
+void UPlayerAttributeSet::OnRep_IceResistance(const FGameplayAttributeData& OldIceResistance) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, IceResistance, OldIceResistance);
+}
+
+void UPlayerAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const
+{
+    GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, PhysicalResistance, OldPhysicalResistance);
 }
 
 void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const
@@ -98,7 +148,6 @@ void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCal
        }
        if (Props.SourceController)
        {
-          
           Props.SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
        }
     }
@@ -111,8 +160,6 @@ void UPlayerAttributeSet::SetEffectProperties(const struct FGameplayEffectModCal
        Props.TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Props.TargetAvatarActor); 
     }
 }
-
-
 
 void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
@@ -157,6 +204,7 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
       }
    }
 }
+
 void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage,bool bCriticalHit)const
 {
    if (Props.SourceCharacter != Props.TargetCharacter)

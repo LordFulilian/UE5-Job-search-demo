@@ -54,6 +54,31 @@ void FPlayerGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
 	FName("Damage"), FString(TEXT("Damage")));
 	
+	GameplayTags.Attributes_PlayerLevel = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Attributes.PlayerLevel"), FString(TEXT("玩家等级 (仅用于UI展示)")));
+	
+	GameplayTags.Damage_Fire = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Damage.Fire"), FString(TEXT("Fire Damage Type")));
+	GameplayTags.Damage_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Damage.Physical"), FString(TEXT("Physical Damage Type")));
+	GameplayTags.Damage_Ice = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Damage.Ice"), FString(TEXT("Ice Damage Type")));
+	
+	//Resistance
+	GameplayTags.Attributes_Resistance_Fire = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Attributes.Resistance.Fire"), FString(TEXT("Resistance to Fire damage")));
+	GameplayTags.Attributes_Resistance_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Attributes.Resistance.Physical"), FString(TEXT("Resistance to Physical damage")));
+	GameplayTags.Attributes_Resistance_Ice = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Attributes.Resistance.Ice"), FString(TEXT("Resistance to Ice damage")));
+	
+	
+	//Map fo Damage Types to Resistances
+	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Fire,GameplayTags.Attributes_Resistance_Fire);
+	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Physical,GameplayTags.Attributes_Resistance_Physical);
+	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Ice,GameplayTags.Attributes_Resistance_Ice);
+	
+	
 	GameplayTags.Effects_Hit_react = UGameplayTagsManager::Get().AddNativeGameplayTag(
 	FName("Effects.Hit_react"), FString(TEXT("Effects_Hit_react")));
 }

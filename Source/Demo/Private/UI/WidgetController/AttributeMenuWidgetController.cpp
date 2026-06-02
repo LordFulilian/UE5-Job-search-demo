@@ -1,24 +1,39 @@
 // Rylan
 
-
 #include "UI/WidgetController/AttributeMenuWidgetController.h"
-
 #include "PlayerGameplayTags.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
 #include "AbilitySystem/Data/AttributeInfo.h"
-
+#include "Player/OPlayerState.h"
 
 void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 {
+    // 🔴 养成好习惯：即使里面暂时没写东西，只要重写了父类虚函数，第一行永远先喊父类
+    Super::BindCallbacksToDependencies();
 }
 
 void UAttributeMenuWidgetController::BroadcastInitialValues()
 {
-	
-	UPlayerAttributeSet	 *AS = CastChecked<UPlayerAttributeSet>(AttributeSet);
-	
-	check(AttributeInfo)
-	/* --- Vital Attributes (核心生存属性) --- */
+    // 🔴 关键修复：先让基类把“等级(Level)”等全局通用数据发出去！
+    Super::BroadcastInitialValues();
+    
+    UPlayerAttributeSet *AS = CastChecked<UPlayerAttributeSet>(AttributeSet);
+    
+    check(AttributeInfo)
+    
+    if (AOPlayerState* OPlayerState = Cast<AOPlayerState>(PlayerState))
+    {
+        // 1. 去你配好的 DataAsset 里，把“名字”和“标签”取出来
+        FPlayerAttributeInfo LevelInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_PlayerLevel);
+        
+        // 2. 把“数值”塞进快递盒
+        LevelInfo.AttributeValue = OPlayerState->GetPlayerLevel();
+        
+        // 3. 走通用属性频道，把完整的快递盒广播给 UI！
+        AttributeInfoDelegate.Broadcast(LevelInfo);
+    }
+    
+    /* --- Vital Attributes (核心生存属性) --- */
     
     // 1. Health (当前生命值)
     FPlayerAttributeInfo HealthInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Vital_Health);
@@ -62,9 +77,7 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
     /* --- Damage Bonus Attributes (三级属性) --- */
 
     // 8. SkillDamageBonus (技能伤害加成)
-    // 注意：请确保你在 PlayerGameplayTags.h 中定义的标签名是 Attributes_DamageBonus_SkillDamageBonus
     FPlayerAttributeInfo SkillDamageBonusInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_DamageBonus_SkillDamageBonus);
     SkillDamageBonusInfo.AttributeValue = AS->GetSkillDamageBonus();
     AttributeInfoDelegate.Broadcast(SkillDamageBonusInfo);
-	
 }

@@ -7,6 +7,8 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerWidgetController.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChangedSignature, int32, StatValue);
 class UAbilitySystemComponent;
 class UAttributeSet;
 
@@ -41,6 +43,9 @@ class DEMO_API UPlayerWidgetController : public UObject
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetWidgetControllerParams(const FWidgetControllerParams& WCParams);
+	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
+	FOnPlayerStatChangedSignature OnPlayerLevelChanged;
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void BroadcastInitialValues();

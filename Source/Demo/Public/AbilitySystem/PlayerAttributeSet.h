@@ -11,7 +11,6 @@
     GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
     GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
-
 USTRUCT()
 struct FEffectProperties
 {
@@ -56,6 +55,16 @@ class DEMO_API UPlayerAttributeSet : public UAttributeSet
 public: 
     UPlayerAttributeSet();
 
+    // ==========================================================
+    // 核心字典：用于 UI 蓝图通过 GameplayTag 自动抓取对应的属性
+    // ==========================================================
+    template<class T>
+    using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
+
+    TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
+    // ==========================================================
+
+
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
     virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
@@ -76,6 +85,20 @@ public:
     FGameplayAttributeData MaxHealth;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, MaxHealth);
 
+    
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_FireResistance, Category = "Resistance Attributes")
+    FGameplayAttributeData FireResistance;
+    ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, FireResistance);
+    
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_IceResistance, Category = "Resistance Attributes")
+    FGameplayAttributeData IceResistance;
+    ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, IceResistance);
+    
+    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalResistance, Category = "Resistance Attributes")
+    FGameplayAttributeData PhysicalResistance;
+    ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, PhysicalResistance);
+    
+    
     /*
      * ==========================================================
      * 一级属性：基础面板 (Primary Attributes)
@@ -159,6 +182,15 @@ public:
 
     UFUNCTION()
     void OnRep_SkillDamageBonus(const FGameplayAttributeData& OldSkillDamageBonus) const;
+    
+    UFUNCTION()
+    void OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance) const;
+    
+    UFUNCTION()
+    void OnRep_IceResistance(const FGameplayAttributeData& OldIceResistance) const;
+    
+    UFUNCTION()
+    void OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const;
     
 
 private:

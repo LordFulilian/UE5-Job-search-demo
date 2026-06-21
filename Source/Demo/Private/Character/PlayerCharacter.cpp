@@ -73,7 +73,10 @@ int32 APlayerCharacter::GetPlayerLevel()
 void APlayerCharacter::InitAbilityActorInfo()
 {
     AOPlayerState* OPlayerState = GetPlayerState<AOPlayerState>();
-    check(OPlayerState)
+    if (!OPlayerState)
+    {
+        return;
+    }
     
     OPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(OPlayerState, this);
     Cast<UPlayerAbilitySystemComponent>(OPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();

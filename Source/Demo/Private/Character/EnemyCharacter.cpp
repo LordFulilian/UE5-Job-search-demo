@@ -5,6 +5,9 @@
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAbilitySystemLibrary.h"
 #include "PlayerGameplayTags.h"
+#include "AI/PlayerAIController.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/MeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -20,6 +23,17 @@ AEnemyCharacter::AEnemyCharacter()
 	
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
 	HealthBar->SetupAttachment(GetRootComponent());
+}
+
+void AEnemyCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	if (!HasAuthority()) return;
+	PlayerAIController = Cast<APlayerAIController>(NewController);
+	
+	PlayerAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	PlayerAIController->RunBehaviorTree(BehaviorTree);
 }
 
 // 

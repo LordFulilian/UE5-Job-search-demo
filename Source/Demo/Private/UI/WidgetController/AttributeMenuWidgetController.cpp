@@ -80,4 +80,21 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
     FPlayerAttributeInfo SkillDamageBonusInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_DamageBonus_SkillDamageBonus);
     SkillDamageBonusInfo.AttributeValue = AS->GetSkillDamageBonus();
     AttributeInfoDelegate.Broadcast(SkillDamageBonusInfo);
+    
+    /* --- Resistance Attributes (抗性属性) --- */
+
+    // 9. Fire Resistance (火抗性)
+    FPlayerAttributeInfo FireResistInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Resistance_Fire);
+    FireResistInfo.AttributeValue = AS->GetFireResistance();
+    AttributeInfoDelegate.Broadcast(FireResistInfo);
+
+    // 10. Ice Resistance (冰抗性)
+    FPlayerAttributeInfo IceResistInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Resistance_Ice);
+    IceResistInfo.AttributeValue = AS->GetIceResistance();
+    AttributeInfoDelegate.Broadcast(IceResistInfo);
+
+    // 11. Physical Resistance (物理抗性)
+    FPlayerAttributeInfo PhysicalResistInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Resistance_Physical);
+    PhysicalResistInfo.AttributeValue = AS->GetPhysicalResistance();
+    AttributeInfoDelegate.Broadcast(PhysicalResistInfo);
 }

@@ -10,8 +10,9 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "EnemyCharacter.generated.h"
 
-
 class UUserWidget;
+class UBehaviorTree;
+class APlayerAIController;
 /**
  * 敌人角色类
  */
@@ -23,7 +24,7 @@ class DEMO_API AEnemyCharacter : public ACharacterBase, public IEnemyInterface
 
 public:
 	AEnemyCharacter();
-
+	virtual void PossessedBy( AController * NewController) override;
 	
 	virtual void ToggleHighlight_Implementation(bool bActive) override;
 	
@@ -61,4 +62,10 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UWidgetComponent> HealthBar;
+	
+	UPROPERTY(EditAnywhere, Category="AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
+	
+	UPROPERTY()
+	TObjectPtr<APlayerAIController> PlayerAIController;
 };

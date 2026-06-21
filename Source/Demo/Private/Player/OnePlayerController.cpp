@@ -2,10 +2,9 @@
 
 #include "Player/OnePlayerController.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
+
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/DamageTextComponent.h"	
 
@@ -54,11 +53,6 @@ void AOnePlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	
-	
-	
-	
-	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		// °ó¶¨ Alt ¼ü
@@ -79,7 +73,7 @@ void AOnePlayerController::ShowDamageNumber_Implementation(float DamageAmount,AC
 		UDamageTextComponent* DamageText = NewObject<UDamageTextComponent>(TargetCharacter,DamageTextComponentClass);
 		DamageText->RegisterComponent();
 		DamageText->AttachToComponent(TargetCharacter->GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
-		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		DamageText->DamageText(DamageAmount,bCriticalHit);
 	}
 }

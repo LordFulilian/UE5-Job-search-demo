@@ -46,6 +46,9 @@ void UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(const UObject* Worl
     AActor* AvatarActor = ASC->GetAvatarActor();
 	
     UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	
+	if (CharacterClassInfo == nullptr) return;
+	
 	FCharacterClassDefaultInfo ClassDefaultInfo = CharacterClassInfo->CharacterClassDefaultInfo(CharacterClass);
     
     FGameplayEffectContextHandle PrimaryAttributesContextHandle = ASC->MakeEffectContext();

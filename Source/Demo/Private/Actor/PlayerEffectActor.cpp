@@ -23,6 +23,7 @@ void APlayerEffectActor::BeginPlay()
 
 void APlayerEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
 {
+	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies)return;
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (TargetASC == nullptr)return;
 	
@@ -36,12 +37,18 @@ void APlayerEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UG
 	if (bIsInfinite && InfiniteEffectRemovalPolicy == EEffectRemovalPolicy::RemoveOnOverlap )
 	{
 		ActiveEffectHandles.Add(ActiveEffectHandle,TargetASC);
-	}	
-	
+	}
+
+	if (!bIsInfinite)
+	{
+		Destroy();
+	}
 }
 
 void APlayerEffectActor::OnOverlap(AActor* TargetActor)
 {
+	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies)return;
+	
     // 1. 瞬间效果 (Instant)
     if (InstantEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnOverlap)
     {
@@ -63,6 +70,8 @@ void APlayerEffectActor::OnOverlap(AActor* TargetActor)
 
 void APlayerEffectActor::OnEndOverlap(AActor* TargetActor)
 {
+	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies)return;
+	
     // 1. 【修复】离开时触发瞬间效果 
     if (InstantEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnEndOverlap)
     {

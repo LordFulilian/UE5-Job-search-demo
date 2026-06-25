@@ -17,6 +17,11 @@ AEnemyCharacter::AEnemyCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<UPlayerAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
 	// 构建属性集
 	AttributeSet = CreateDefaultSubobject<UPlayerAttributeSet>(TEXT("AttributeSet"));
@@ -34,6 +39,8 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	
 	PlayerAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 	PlayerAIController->RunBehaviorTree(BehaviorTree);
+	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"),false);
+	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"),CharacterClass != ECharacterClass::remote);
 }
 
 // 
@@ -133,6 +140,8 @@ void AEnemyCharacter::HitReactTagChange(const FGameplayTag CallbackTag, int32 Ne
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f: BaseWalkSpeed;
+	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"),bHitReacting);
+	
 }
 
 void AEnemyCharacter::InitAbilityActorInfo()

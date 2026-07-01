@@ -36,6 +36,8 @@ public:
 	FGameplayTag Damage_Physical;
 	FGameplayTag Damage_Ice;
 	
+	FGameplayTag Abilities_Attack;
+	
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
 	
 	FGameplayTag Effects_Hit_react;

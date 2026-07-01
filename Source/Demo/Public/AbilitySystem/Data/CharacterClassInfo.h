@@ -21,37 +21,40 @@ USTRUCT(BlueprintType)
 struct FCharacterClassDefaultInfo
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(EditDefaultsOnly,Category="Class Defaults")
+    
+	UPROPERTY(EditDefaultsOnly, Category="Class Defaults")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
+    
+	// 🔴 修复 1：改为正确的 StartupAbilities 数组
+	UPROPERTY(EditDefaultsOnly, Category="Class Defaults")
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 };
+
 /**
- * 
- */
+ * */
 UCLASS()
 class DEMO_API UCharacterClassInfo : public UDataAsset
 {
 	GENERATED_BODY()
-	
+    
 public:
-	UPROPERTY(EditDefaultsOnly,Category="Character Class Defaults")
-	TMap<ECharacterClass,FCharacterClassDefaultInfo> CharacterClassInfomation;
-	
-	UPROPERTY(EditDefaultsOnly,Category="Common Class Defaults")
+	UPROPERTY(EditDefaultsOnly, Category="Character Class Defaults")
+	TMap<ECharacterClass, FCharacterClassDefaultInfo> CharacterClassInformation; // 顺手修了个小拼写 Information
+    
+	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
-	
-	UPROPERTY(EditDefaultsOnly,Category="Common Class Defaults")
+    
+	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> SecondaryAttributes;
-	
-	UPROPERTY(EditDefaultsOnly,Category="Common Class Defaults")
+    
+	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> VitalAttributes;
+    
+	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
+	TArray<TSubclassOf<UGameplayAbility>> CommonAbilities; // 顺手修了个小拼写 Abilities
+    
+	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults|Damage")
+	TObjectPtr<UCurveTable> DamageCalculationCoefficients;
 	
-	UPROPERTY(EditDefaultsOnly,Category="Common Class Defaults")
-	TArray<TSubclassOf<UGameplayAbility>> CommonAbilites;
-	
-	UPROPERTY(EditDefaultsOnly,Category="Common Class Defaults|Damage")
-	TObjectPtr<UCurveTable>DamageCalculationCoefficients;
-	
-	
-	FCharacterClassDefaultInfo CharacterClassDefaultInfo(ECharacterClass CharacterClass);
+	FCharacterClassDefaultInfo GetClassDefaultInfo(ECharacterClass CharacterClass);
 };

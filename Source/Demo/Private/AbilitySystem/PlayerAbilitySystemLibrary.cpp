@@ -4,6 +4,7 @@
 
 #include "PlayerAbilityTypes.h"
 #include "Game/PlayerGameModeBase.h"
+#include "interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/WidgetController/PlayerWidgetController.h"
 #include "Player/OPlayerState.h"
@@ -44,12 +45,13 @@ UAttributeMenuWidgetController* UPlayerAbilitySystemLibrary::GetAttributeMenuWid
 void UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(const UObject* WorldContextObject,ECharacterClass CharacterClass, float Level,UAbilitySystemComponent*ASC)
 {
     AActor* AvatarActor = ASC->GetAvatarActor();
-	
+    
     UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
-	
-	if (CharacterClassInfo == nullptr) return;
-	
-	FCharacterClassDefaultInfo ClassDefaultInfo = CharacterClassInfo->CharacterClassDefaultInfo(CharacterClass);
+    
+    if (CharacterClassInfo == nullptr) return;
+    
+    // 🔴 修复 1：使用更新后的函数名 GetClassDefaultInfo
+    FCharacterClassDefaultInfo ClassDefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
     
     FGameplayEffectContextHandle PrimaryAttributesContextHandle = ASC->MakeEffectContext();
     PrimaryAttributesContextHandle.AddSourceObject(AvatarActor);
@@ -67,15 +69,26 @@ void UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(const UObject* Worl
     ASC->ApplyGameplayEffectSpecToSelf(*VitalAttributesSpecHandle.Data.Get());
 }
 
-void UPlayerAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
+void UPlayerAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC,ECharacterClass CharacterClass)
 {
     UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
     if (CharacterClassInfo == nullptr) return;
     
-    for (TSubclassOf<UGameplayAbility>AbilityClass : CharacterClassInfo->CommonAbilites)
+    // 🔴 修复 2：修正 CommonAbilities 的拼写
+    for (TSubclassOf<UGameplayAbility>AbilityClass : CharacterClassInfo->CommonAbilities)
     {
        FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass,1);
        ASC->GiveAbility(AbilitySpec);
+    }
+    
+    const FCharacterClassDefaultInfo& DefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
+    for (TSubclassOf<UGameplayAbility>AbilityClass : DefaultInfo.StartupAbilities)
+    {
+       if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+       {
+          FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass,CombatInterface->GetPlayerLevel());
+          ASC->GiveAbility(AbilitySpec);
+       }
     }
 }
 
@@ -89,18 +102,18 @@ UCharacterClassInfo* UPlayerAbilitySystemLibrary::GetCharacterClassInfo(const UO
 
 bool UPlayerAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle EffectContextHandle)
 {
-	if (const FPlayerGamePlayEffectContext* PlayEffectContext = static_cast<const FPlayerGamePlayEffectContext*>(EffectContextHandle.Get()))
-	{
-		return PlayEffectContext->IsCriticalHit();
-	}
-	return false;
+    if (const FPlayerGamePlayEffectContext* PlayEffectContext = static_cast<const FPlayerGamePlayEffectContext*>(EffectContextHandle.Get()))
+    {
+       return PlayEffectContext->IsCriticalHit();
+    }
+    return false;
 }
 
 void UPlayerAbilitySystemLibrary::SetIsCriticalHit(FGameplayEffectContextHandle EffectContextHandle,
-	bool bInIsCriticalHit)
+    bool bInIsCriticalHit)
 {
-	if (FPlayerGamePlayEffectContext* PlayEffectContext = static_cast<FPlayerGamePlayEffectContext*>(EffectContextHandle.Get()))
-	{
-		PlayEffectContext->SetIsCriticalHit(bInIsCriticalHit);
-	}
+    if (FPlayerGamePlayEffectContext* PlayEffectContext = static_cast<FPlayerGamePlayEffectContext*>(EffectContextHandle.Get()))
+    {
+       PlayEffectContext->SetIsCriticalHit(bInIsCriticalHit);
+    }
 }

@@ -40,7 +40,7 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	PlayerAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 	PlayerAIController->RunBehaviorTree(BehaviorTree);
 	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"),false);
-	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"),CharacterClass != ECharacterClass::remote);
+	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"),CharacterClass == ECharacterClass::remote);
 }
 
 // 
@@ -83,7 +83,7 @@ void AEnemyCharacter::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	InitAbilityActorInfo();
 
-	UPlayerAbilitySystemLibrary::GiveStartupAbilities(this,AbilitySystemComponent);
+	UPlayerAbilitySystemLibrary::GiveStartupAbilities(this,AbilitySystemComponent,CharacterClass);
 
 	HealthBar->InitWidget();
 

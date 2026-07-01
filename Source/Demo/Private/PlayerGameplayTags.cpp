@@ -81,4 +81,7 @@ void FPlayerGameplayTags::InitializeNativeGameplayTags()
 	
 	GameplayTags.Effects_Hit_react = UGameplayTagsManager::Get().AddNativeGameplayTag(
 	FName("Effects.Hit_react"), FString(TEXT("Effects_Hit_react")));
+	
+	GameplayTags.Abilities_Attack = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Abilities_Attack"), FString(TEXT("Abilities_Attack")));
 }

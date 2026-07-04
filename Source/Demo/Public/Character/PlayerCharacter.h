@@ -10,6 +10,8 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UInventoryPanelWidget;
+class UInventoryComponent;
 
 UCLASS()
 class DEMO_API APlayerCharacter : public ACharacterBase
@@ -23,13 +25,18 @@ public:
     virtual void PossessedBy(AController* NewController) override;
 
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-    // 加上 BlueprintCallable，这样你在 Widget 蓝图里也能直接调这个函数关掉面板
+
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ToggleOpenPanelAction();
+
+    // ? 这一行声明就是解开报错的关键！
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void ToggleInventoryPanelAction();
 
     // 加上 BlueprintReadOnly，允许外部安全地读取当前面板实例
     UPROPERTY(BlueprintReadOnly, Category = "UI")
     UUserWidget* CharacterPanelInstance;
+
 protected:
     virtual void BeginPlay() override;
     virtual void OnRep_PlayerState() override;
@@ -58,16 +65,32 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* OpenPanelAction;
     UPROPERTY(EditAnywhere, Category = "Input")
-    UInputAction* LockAction; // 
+    UInputAction* LockAction; 
+    UPROPERTY(EditAnywhere, Category = "Input")
+    UInputAction* InteractAction; // 交互/拾取按键
+    
+    // ? 背包输入动作
+    UPROPERTY(EditAnywhere, Category = "Input")
+    UInputAction* OpenInventoryAction;
+    
+    UPROPERTY(EditDefaultsOnly, Category = "UI|Inventory")
+    TSubclassOf<UInventoryPanelWidget> InventoryPanelClass;
+
+    // 3. 用来缓存生成的面板实例
+    UPROPERTY()
+    TObjectPtr<UInventoryPanelWidget> InventoryPanelInstance;
+  
 
     UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UPlayerInputConfig> InputConfig;
+    
     // --- 输入回调函数 ---
-    void Move(const   FInputActionValue& Value);
+    void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
     void Zoom(const FInputActionValue& Value);
     void SprintStart();
     void SprintStop();
+    void Interact();
     
     void AbilityInputTagPressed(FGameplayTag InputTag);
     void AbilityInputTagReleased(FGameplayTag InputTag);
@@ -78,7 +101,7 @@ protected:
  
 
     // ==========================================
-    // ? 锁定系统核心变量与函数
+    // 锁定系统核心变量与函数
     // ==========================================
     AActor* FindBestTarget();
     void ToggleLockOn();

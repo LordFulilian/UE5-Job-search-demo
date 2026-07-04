@@ -15,7 +15,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/HUD/PlayerHUD.h"
 #include "Blueprint/UserWidget.h"
-#include "input/PlayerInputComponent.h" // 确保路径正确
+#include "Components/ItemPickup.h"
+#include "Components/InventoryComponent.h" 
+#include "UI/Inventory/InventoryPanelWidget.h"
+#include "input/PlayerInputComponent.h" 
 #include "interaction/EnemyInterface.h" 
 
 void APlayerCharacter::OnRep_PlayerState()
@@ -85,12 +88,12 @@ void APlayerCharacter::InitAbilityActorInfo()
     AttributeSet = OPlayerState->GetAttributeSet();
     
     // ==========================================
-    // 🔴 修复点 1：初始化属性 (让血条和攻击力变成非 0)
+    // 初始化属性 (让血条和攻击力变成非 0)
     // ==========================================
-   InitialzeDefaultAttributes(); 
+    InitialzeDefaultAttributes(); 
     
     // ==========================================
-    // 🔴 修复点 2：赋予初始技能 (让左键平A生效)
+    // 赋予初始技能 (让左键平A生效)
     // ==========================================
     if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent))
     {
@@ -112,22 +115,21 @@ void APlayerCharacter::BeginPlay()
 }
 
 // ==========================================
-// 🔴 输入绑定核心逻辑 (已修复变量冲突)
+// 输入绑定核心逻辑
 // ==========================================
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
     
-    // 1. 将名字改为 AuraInputComponent，避免与形参 PlayerInputComponent 重名
     UPlayerInputComponent* AuraInputComponent = CastChecked<UPlayerInputComponent>(PlayerInputComponent);
 
-    // 2. 绑定 GAS 技能动作 (由 InputConfig 数据资产驱动)
+    // 绑定 GAS 技能动作
     if (InputConfig)
     {
         AuraInputComponent->BindAbilityAction(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
     }
 
-    // 3. 绑定基础动作
+    // 绑定基础动作
     if (MoveAction)
         AuraInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
@@ -149,11 +151,23 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
         AuraInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
     }
     
+    // 绑定交互/拾取
+    if (InteractAction)
+    {
+        AuraInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
+    }
+
+    // 绑定锁定
+    if (LockAction)
+        AuraInputComponent->BindAction(LockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleLockOn);
+
+    // 🔴 角色面板开启键
     if (OpenPanelAction)
         AuraInputComponent->BindAction(OpenPanelAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleOpenPanelAction);
           
-    if (LockAction)
-        AuraInputComponent->BindAction(LockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleLockOn);
+    // 🔴 背包面板开启键
+    if (OpenInventoryAction)
+        AuraInputComponent->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventoryPanelAction);
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -213,12 +227,37 @@ void APlayerCharacter::SprintStop()
     if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = 400.f; 
 }
 
-// 🔴 这里需要调用 ASC 来响应输入标签
+void APlayerCharacter::Interact()
+{
+    UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
+    if (!Inventory) return;
+    
+    TArray<AActor*> OverlappingActors;
+    GetOverlappingActors(OverlappingActors, AItemPickup::StaticClass());
+    
+    for (AActor* OverlappedActor : OverlappingActors)
+    {
+        if (AItemPickup* Pickup = Cast<AItemPickup>(OverlappedActor))
+        {
+            if (Pickup->ItemID == NAME_None)
+            {
+                continue;
+            }
+
+            // 装入背包
+            if (Inventory->AddItem(Pickup->ItemID, 1))
+            {
+                Pickup->Destroy();
+            }
+        }
+    }
+}
+
 void APlayerCharacter::AbilityInputTagPressed(FGameplayTag InputTag)
 {
     if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(GetAbilitySystemComponent()))
     {
-        PlayerASC->AbilityInputTagPressed(InputTag); // 这里会去调用 TryActivateAbility 触发平A！
+        PlayerASC->AbilityInputTagPressed(InputTag);
     }
 }
 
@@ -238,6 +277,9 @@ void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
     }
 }
 
+// ========================================================
+// 🔴 角色属性面板 (原来的逻辑)
+// ========================================================
 void APlayerCharacter::ToggleOpenPanelAction()
 {
     APlayerController* PC = Cast<APlayerController>(GetController());
@@ -267,6 +309,49 @@ void APlayerCharacter::ToggleOpenPanelAction()
           PC->bShowMouseCursor = true;
           PC->SetPause(true); 
        }
+    }
+}
+
+// ========================================================
+// 🔴 背包面板 (带数据注射的新逻辑)
+// ========================================================
+void APlayerCharacter::ToggleInventoryPanelAction()
+{
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC) return;
+
+    if (InventoryPanelInstance && InventoryPanelInstance->IsInViewport())
+    {
+        InventoryPanelInstance->RemoveFromParent();
+        FInputModeGameOnly InputMode;
+        PC->SetInputMode(InputMode);
+        PC->bShowMouseCursor = false;
+        PC->SetPause(false); 
+    }
+    else
+    {
+        if (InventoryPanelInstance == nullptr && InventoryPanelClass != nullptr)
+        {
+            InventoryPanelInstance = CreateWidget<UInventoryPanelWidget>(PC, InventoryPanelClass);
+        }
+   
+        if (InventoryPanelInstance)
+        {
+            // 核心注射环节：拿到玩家身上的背包，喂给 UI！
+            UInventoryComponent* InventoryComp = FindComponentByClass<UInventoryComponent>();
+            if (InventoryComp)
+            {
+                InventoryPanelInstance->InitializePanel(InventoryComp);
+            }
+
+            InventoryPanelInstance->AddToViewport();
+            FInputModeGameAndUI InputMode;
+            InputMode.SetWidgetToFocus(InventoryPanelInstance->TakeWidget()); 
+            InputMode.SetHideCursorDuringCapture(false);
+            PC->SetInputMode(InputMode);
+            PC->bShowMouseCursor = true;
+            PC->SetPause(true); 
+        }
     }
 }
 

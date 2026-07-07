@@ -1,4 +1,4 @@
-#include "Character/PlayerCharacter.h"
+﻿#include "Character/PlayerCharacter.h"
 
 // 【核心头文件】
 #include "GameFramework/SpringArmComponent.h" 
@@ -9,6 +9,8 @@
 #include "EnhancedInputComponent.h"           
 #include "AbilitySystemComponent.h"
 #include "Player/OnePlayerController.h"
+#include "AbilitySystem/PlayerAbilitySystemLibrary.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "InputActionValue.h"                 
 #include "Player/OPlayerState.h"              
 #include "Kismet/KismetMathLibrary.h"
@@ -90,7 +92,23 @@ void APlayerCharacter::InitAbilityActorInfo()
     // ==========================================
     // 初始化属性 (让血条和攻击力变成非 0)
     // ==========================================
-    InitialzeDefaultAttributes(); 
+    InitialzeDefaultAttributes();
+    
+    // Also apply VitalAttributes from CharacterClassInfo if available
+    if (UCharacterClassInfo* ClassInfo = UPlayerAbilitySystemLibrary::GetCharacterClassInfo(this))
+    {
+        if (ClassInfo->VitalAttributes)
+        {
+            FGameplayEffectContextHandle VitalCtx = AbilitySystemComponent->MakeEffectContext();
+            VitalCtx.AddSourceObject(this);
+            FGameplayEffectSpecHandle VitalSpec = AbilitySystemComponent->MakeOutgoingSpec(
+                ClassInfo->VitalAttributes, 
+                static_cast<float>(GetPlayerLevel()), 
+                VitalCtx);
+            AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*VitalSpec.Data.Get());
+            UE_LOG(LogTemp, Log, TEXT("[PlayerCharacter] Applied VitalAttributes from CharacterClassInfo"));
+        }
+    } 
     
     // ==========================================
     // 赋予初始技能 (让左键平A生效)
@@ -278,7 +296,7 @@ void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
 }
 
 // ========================================================
-// 🔴 角色属性面板 (原来的逻辑)
+// 🔴 角色属性面板 
 // ========================================================
 void APlayerCharacter::ToggleOpenPanelAction()
 {
@@ -313,7 +331,7 @@ void APlayerCharacter::ToggleOpenPanelAction()
 }
 
 // ========================================================
-// 🔴 背包面板 (带数据注射的新逻辑)
+// 🔴 背包面板 
 // ========================================================
 void APlayerCharacter::ToggleInventoryPanelAction()
 {

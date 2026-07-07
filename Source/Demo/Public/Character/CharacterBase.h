@@ -1,4 +1,4 @@
-
+﻿
 
 #pragma once
 
@@ -65,6 +65,9 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 private:
 	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TObjectPtr<UAnimMontage> DeathMontage;
+
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TObjectPtr<UAnimMontage> HitReactAnimMontage;
 };

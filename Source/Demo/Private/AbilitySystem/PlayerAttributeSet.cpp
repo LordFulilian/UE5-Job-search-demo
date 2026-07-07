@@ -181,6 +181,11 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
       {
          const float NewHealth = GetHealth() - LocalIncomingDamage;
          SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+      	
+      	if (GEngine)
+      	{
+      		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("【底层扣血成功】当前真实剩余血量: %f"), GetHealth()));
+      	}
          
          const bool bFatal = NewHealth <= 0.f;
          
@@ -205,13 +210,23 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
    }
 }
 
-void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage,bool bCriticalHit)const
+void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage, bool bCriticalHit) const
 {
-   if (Props.SourceCharacter != Props.TargetCharacter)
-   {
-      if (AOnePlayerController* PC = Cast<AOnePlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter,0)))
-      {
-         PC->ShowDamageNumber(Damage,Props.TargetCharacter,bCriticalHit);
-      }
-   }
+	if (Props.SourceCharacter != Props.TargetCharacter)
+	{
+		// 1. 尝试拿攻击方的控制器（玩家打怪时生效）
+		AOnePlayerController* PC = Cast<AOnePlayerController>(Props.SourceController);
+        
+		// 2. 如果拿不到（说明是怪物打玩家），那就拿挨打方的控制器
+		if (!PC)
+		{
+			PC = Cast<AOnePlayerController>(Props.TargetController);
+		}
+        
+		// 3. 弹伤害数字
+		if (PC)
+		{
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bCriticalHit);
+		}
+	}
 }

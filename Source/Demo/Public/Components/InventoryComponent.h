@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
 #include "GameplayEffect.h" // GAS：为了使用 UGameplayEffect
+#include "Components/ItemTypes.h"
 #include "InventoryComponent.generated.h"
 
 // =========================================================================
@@ -25,6 +26,9 @@ struct FItemStaticData : public FTableRowBase
     
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data")
     UStaticMesh* ItemMesh = nullptr;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+    EItemType ItemType;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data")
     int32 MaxStackSize = 99; // 最大堆叠数量

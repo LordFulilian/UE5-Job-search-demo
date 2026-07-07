@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -31,10 +31,10 @@ public:
 	virtual void Die() override;
 	
 	UPROPERTY(BlueprintAssignable)
-	FOnAttributeChangedSinature OnHealthChanged;
+	FOnAttributeChangedSignature OnHealthChanged;
 
 	UPROPERTY(BlueprintAssignable)
-	FOnAttributeChangedSinature OnMaxHealthChanged;
+	FOnAttributeChangedSignature OnMaxHealthChanged;
 	
 	void HitReactTagChange(const FGameplayTag CallbackTag,int32 NewCount);
 	
@@ -44,6 +44,8 @@ public:
 	UPROPERTY(BlueprintReadOnly,Category = "Combat")
 	float BaseWalkSpeed = 300.0f;	
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot")
+	TSubclassOf<class AItemPickup> ItemPickupClass;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Combat")
 	float LifeSpan= 5.f;	

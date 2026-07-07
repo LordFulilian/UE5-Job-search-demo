@@ -1,6 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Character/EnemyCharacter.h"
+#include "Player/OPlayerState.h"      
+#include "Components/ExpComponent.h"  
+#include "Components/ItemPickup.h"   
 #include "AbilitySystem/PlayerAttributeSet.h"
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAbilitySystemLibrary.h"
@@ -9,7 +12,9 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/MeshComponent.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
+
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -70,6 +75,26 @@ void AEnemyCharacter::ToggleHighlight_Implementation(bool bActive)
 void AEnemyCharacter::Die()
 {
 	SetLifeSpan(LifeSpan);
+	if (APawn* KillerPawn = Cast<APawn>(GetInstigator()))
+	{
+		if (AOPlayerState* PS = KillerPawn->GetPlayerState<AOPlayerState>())
+		{
+			if (PS->ExpComponent)
+			{
+				PS->ExpComponent->AddExperience(50 * Level);
+			}
+		}
+	}
+
+	// Spawn loot drop
+	if (ItemPickupClass && HasAuthority())
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		FVector SpawnLoc = GetActorLocation() + FVector(0.f, 0.f, 50.f);
+		GetWorld()->SpawnActor<AItemPickup>(ItemPickupClass, SpawnLoc, FRotator::ZeroRotator, SpawnParams);
+	}
+
 	Super::Die();
 	
 }

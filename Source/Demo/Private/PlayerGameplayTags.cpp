@@ -76,6 +76,7 @@ void FPlayerGameplayTags::InitializeNativeGameplayTags()
 	//Map fo Damage Types to Resistances
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Fire,GameplayTags.Attributes_Resistance_Fire);
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Physical,GameplayTags.Attributes_Resistance_Physical);
+	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage, GameplayTags.Attributes_Resistance_Physical); // Fallback for generic Damage tag
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Ice,GameplayTags.Attributes_Resistance_Ice);
 	
 	

@@ -82,6 +82,18 @@ void AOnePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// ? 1. 强行隐藏鼠标
+	bShowMouseCursor = false;
+
+	// ? 2. 创建“仅游戏”输入模式配置
+	FInputModeGameOnly InputModeData;
+    
+	// (可选) 确保鼠标被锁定在游戏视口内，防止切屏误触
+	InputModeData.SetConsumeCaptureMouseDown(true); 
+
+	// ? 3. 强行把输入焦点全部还给游戏世界和你的角色
+	SetInputMode(InputModeData);
+	
 	// 安全检查
 	if (PlayerContext)
 	{

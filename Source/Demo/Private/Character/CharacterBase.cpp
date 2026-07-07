@@ -1,4 +1,4 @@
-
+﻿
 
 #include "Character/CharacterBase.h"
 
@@ -40,19 +40,47 @@ UAnimMontage* ACharacterBase::GetHitReactMontage_Implementation()
 void ACharacterBase::Die()
 {
 	Weapon->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld,true));
-	MulticasHamdleDeath();
+
+	if (DeathMontage && GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		float Duration = DeathMontage->GetPlayLength();
+		GetMesh()->GetAnimInstance()->Montage_Play(DeathMontage);
+
+		FTimerHandle DeathTimer;
+		GetWorld()->GetTimerManager().SetTimer(DeathTimer, [this]()
+		{
+			MulticasHamdleDeath();
+		}, Duration, false);
+	}
+	else
+	{
+		MulticasHamdleDeath();
+	}
 }
 
 void ACharacterBase::MulticasHamdleDeath_Implementation()
 {
+	// Disable capsule so it doesn't push the ragdoll
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Disable movement entirely
+	GetCharacterMovement()->DisableMovement();
+
+	// Weapon: drop with physics
 	Weapon->SetSimulatePhysics(true);
 	Weapon->SetEnableGravity(true);
-	Weapon->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	
-	GetMesh()->SetSimulatePhysics(true);
+	Weapon->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	// Mesh: ragdoll with damped physics
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	GetMesh()->SetEnableGravity(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic,ECR_Block);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+
+	// Reduce explosion: apply linear damping
+	GetMesh()->SetLinearDamping(0.5f);
+	GetMesh()->SetAngularDamping(1.0f);
 }
 
 void ACharacterBase::BeginPlay()

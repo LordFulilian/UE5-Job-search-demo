@@ -1,4 +1,4 @@
-#include "AbilitySystem/Abilities/PlayerMeleeAttack.h"
+﻿#include "AbilitySystem/Abilities/PlayerMeleeAttack.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -49,17 +49,39 @@ void UPlayerMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
        
        MontageTask->ReadyForActivation();
     }
+
+    if (HitTraceDelay > 0.f && GetWorld())
+    {
+        bTraceAlreadyFired = false;
+        GetWorld()->GetTimerManager().SetTimer(HitTraceTimerHandle, this, &UPlayerMeleeAttack::OnHitTraceTimerFired, HitTraceDelay, false);
+    }
 }
 
 void UPlayerMeleeAttack::OnMontageCompleted()
 {
+    if (GetWorld() && HitTraceTimerHandle.IsValid())
+    {
+        GetWorld()->GetTimerManager().ClearTimer(HitTraceTimerHandle);
+    }
+    bTraceAlreadyFired = false;
     // 动画播放完毕，调用底层函数正式结束当前技能。
     // 这样 GAS 系统才会知道你砍完了，允许你进行下一次攻击或释放别的技能。
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
+void UPlayerMeleeAttack::OnHitTraceTimerFired()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] Timer fallback fired - executing trace"));
+    PerformMeleeTraceAndApplyDamage();
+}
+
 void UPlayerMeleeAttack::OnHitEventReceived(FGameplayEventData Payload)
 {
+    if (GetWorld() && HitTraceTimerHandle.IsValid())
+    {
+        GetWorld()->GetTimerManager().ClearTimer(HitTraceTimerHandle);
+    }
+    UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] OnHitEventReceived fired! Tag=%s"), *HitEventTag.ToString());
     // 动画播到了受击帧！立刻执行射线和伤害检测！
     PerformMeleeTraceAndApplyDamage();
 }
@@ -68,6 +90,15 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
 {
     AActor* AvatarActor = GetAvatarActorFromActorInfo();
     if (!AvatarActor) return;
+
+    if (bTraceAlreadyFired)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] Trace already fired this activation - skipping"));
+        return;
+    }
+    bTraceAlreadyFired = true;
+
+    UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] PerformMeleeTraceAndApplyDamage called by %s"), *AvatarActor->GetName());
 
     UWorld* World = GetWorld();
     if (!World) return;
@@ -90,7 +121,7 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
        StartLocation, 
        EndLocation, 
        FQuat::Identity, 
-       ECC_Visibility, 
+       ECollisionChannel::ECC_Pawn, 
        SphereShape, 
        QueryParams
     );
@@ -127,6 +158,8 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
        }
 
        // 记录砍之前的血量
+       UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] Hit %s!"), *TargetActor->GetName());
+
        bool bFoundHealth = false;
        float OldHealth = TargetASC->GetGameplayAttributeValue(UPlayerAttributeSet::GetHealthAttribute(), bFoundHealth);
 
@@ -142,7 +175,7 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
     		FPlayerGameplayTags GameplayTags = FPlayerGameplayTags::Get(); 
            
     	const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
-    		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage, ScaledDamage);
+    		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage_Physical, ScaledDamage);
 
     		// 3. 🔴 核心：带着塞好数字的句柄，狠狠地打在敌人身上！(这一步必须放在最后)
     		FActiveGameplayEffectHandle ActiveHandle = SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);

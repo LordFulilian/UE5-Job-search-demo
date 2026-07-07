@@ -1,4 +1,4 @@
-// Rylan
+﻿// Rylan
 
 #include "AbilitySystem/ExecCalc/ExecCalc_Damage.h"
 #include "AbilitySystemComponent.h"
@@ -137,9 +137,10 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     UE_LOG(LogTemp, Warning, TEXT("【GAS 调试】成功抓取到 Source(攻击者) 的面板暴击率: %f"), CritRate);
 
     // 5. 初步融合：扣除抗性后的魔法伤害 + 面板物理攻击力
-    float TotalDamage = BaseDamage + Attack;
-    
-    // 6. 动态读取护甲系数 
+    // BaseDamage is the SetByCaller value (e.g. from curve table). Attack acts as a percentage bonus.
+    float TotalDamage = BaseDamage * (1.0f + Attack / 100.0f);
+     
+    // Default defense coefficient (armor penetration factor)
     float DefenseCoefficient = 100.f; 
     if (SourceAvatar && SourceCombatInterface)
     {
@@ -150,9 +151,10 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
             if (DefenseCurve)
             {
                 DefenseCoefficient = DefenseCurve->Eval(SourceCombatInterface->GetPlayerLevel());
+                UE_LOG(LogTemp, Log, TEXT("[ExecCalc_Damage] Using DefenseCoefficient from curve: %.1f"), DefenseCoefficient);
             }
         }
-    }
+    } 
     
     // 7. 暴击判定 
     // 🔴 修复区间：按小数计算 (0.0 到 1.0)。填 0.05 就是 5% 的真实概率

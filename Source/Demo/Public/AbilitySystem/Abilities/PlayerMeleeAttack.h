@@ -1,4 +1,4 @@
-// Rylan
+﻿// Rylan
 
 #pragma once
 
@@ -34,10 +34,8 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category ="Damage")
 	FScalableFloat Damage;
-	// 🔴 之前写的射线检测与伤害应用函数
 	void PerformMeleeTraceAndApplyDamage();
     
-	// 伤害的 GE 和 射线参数...
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	TSubclassOf<class UGameplayEffect> DamageEffectClass;
 
@@ -46,4 +44,14 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Trace")
 	float TraceRadius = 45.f;
+
+	// Timer-based fallback: fires hit trace even without matching anim notify event
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Timing")
+	float HitTraceDelay = 0.5f;
+
+	FTimerHandle HitTraceTimerHandle;
+	bool bTraceAlreadyFired = false;
+
+	UFUNCTION()
+	void OnHitTraceTimerFired();
 };

@@ -1,16 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise">
-    <file url="file://$PROJECT_DIR$/Source/Demo/Private/Actor/PlayerEffectActor.cpp" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Private/Character/CharacterBase.cpp" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Private/Character/EnemyCharacter.cpp" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Private/Character/PlayerCharacter.cpp" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Private/Player/OPlayerState.cpp" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Private/Player/OnePlayerController.cpp" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Public/Character/CharacterBase.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Public/Character/EnemyCharacter.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Public/Character/PlayerCharacter.h" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Public/Player/OnePlayerController.h" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Source/Demo/Public/interaction/EnemyInterface.h" charset="UTF-8" />
-  </component>
+  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise" />
 </project>

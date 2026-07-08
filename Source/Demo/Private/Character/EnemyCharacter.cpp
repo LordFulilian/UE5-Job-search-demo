@@ -11,6 +11,7 @@
 #include "AI/PlayerAIController.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/MeshComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
@@ -74,7 +75,22 @@ void AEnemyCharacter::ToggleHighlight_Implementation(bool bActive)
 
 void AEnemyCharacter::Die()
 {
+	// Prevent re-entry (death animation plays, AI might trigger Die again)
+	if (bIsDead) return;
+	bIsDead = true;
+
+	// Immediately kill AI to stop attacking during death animation
+	if (PlayerAIController)
+	{
+		PlayerAIController->StopMovement();
+		if (PlayerAIController->GetBrainComponent())
+		{
+			PlayerAIController->GetBrainComponent()->StopLogic(TEXT("Died"));
+		}
+	}
+
 	SetLifeSpan(LifeSpan);
+
 	if (APawn* KillerPawn = Cast<APawn>(GetInstigator()))
 	{
 		if (AOPlayerState* PS = KillerPawn->GetPlayerState<AOPlayerState>())
@@ -86,17 +102,20 @@ void AEnemyCharacter::Die()
 		}
 	}
 
-	// Spawn loot drop
+	// Spawn loot drop at ground level (use mesh bone location, not capsule center)
 	if (ItemPickupClass && HasAuthority())
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		FVector SpawnLoc = GetActorLocation() + FVector(0.f, 0.f, 50.f);
+		// Spawn at ground level: capsule center minus half height, plus small offset
+		float CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		FVector SpawnLoc = GetActorLocation();
+		SpawnLoc.Z -= CapsuleHalfHeight;
+		SpawnLoc.Z += 15.f;
 		GetWorld()->SpawnActor<AItemPickup>(ItemPickupClass, SpawnLoc, FRotator::ZeroRotator, SpawnParams);
 	}
 
 	Super::Die();
-	
 }
 
 

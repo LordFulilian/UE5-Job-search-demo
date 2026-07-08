@@ -4,6 +4,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 
@@ -43,14 +45,17 @@ void ACharacterBase::Die()
 
 	if (DeathMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
-		float Duration = DeathMontage->GetPlayLength();
-		GetMesh()->GetAnimInstance()->Montage_Play(DeathMontage);
-
-		FTimerHandle DeathTimer;
-		GetWorld()->GetTimerManager().SetTimer(DeathTimer, [this]()
+		// Bind ragdoll to montage end — no timer gap, no "stand up" frame
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindWeakLambda(this, [this](UAnimMontage* Montage, bool bInterrupted)
 		{
-			MulticasHamdleDeath();
-		}, Duration, false);
+			if (!bInterrupted)
+			{
+				MulticasHamdleDeath();
+			}
+		});
+		GetMesh()->GetAnimInstance()->Montage_Play(DeathMontage);
+		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, DeathMontage);
 	}
 	else
 	{

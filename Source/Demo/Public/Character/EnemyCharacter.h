@@ -41,6 +41,8 @@ public:
 	UPROPERTY(BlueprintReadOnly,Category = "Combat")
 	bool bHitReacting = false;
 	
+	bool bIsDead = false;
+	
 	UPROPERTY(BlueprintReadOnly,Category = "Combat")
 	float BaseWalkSpeed = 300.0f;	
 	

@@ -9,12 +9,79 @@
   <component name="ChangeListManager">
     <list default="true" id="68f16bd4-cfdc-4428-94fb-546923d87dcb" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Demo.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Demo.dir/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_HitReact.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_HitReact.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultGameplayTags.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultGameplayTags.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AI/BehaviorTree/BB_EnemyBlackboard.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/AI/BehaviorTree/BB_EnemyBlackboard.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AI/BehaviorTree/BT_EnemyBehaviorTree.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/AI/BehaviorTree/BT_EnemyBehaviorTree.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/Data/DA_CharacterClassInfo.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/Data/DA_CharacterClassInfo.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_EnemyMelee.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_EnemyMelee.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_Shinbi_Combo.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_Shinbi_Melee.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/AbilitySystem/GamePlayAbilities/GA_Shinbi_Melee.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Enemy/ABP_Enemy.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Enemy/AM_Grux_Death.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Enemy/AM_MeleeAttack.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Enemy/BP_Enemy01.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Enemy/BP_Enemy01.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Enemy/Death_A.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/ABP_Player1D.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/ABP_Player1D.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/ABP_PlayerBluePrint.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/ABP_PlayerBluePrint.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/AM_Shinbi_Attack.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/AM_Shinbi_Attack.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/BP_Player.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/BP_Player.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/HitReact_Front_Montage.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/HitReact_Front_Montage.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/Character/Player/HitReact_Front_Montage.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/InPut/DA_PlayerInputConfig.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/InPut/DA_PlayerInputConfig.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/InPut/IMC_PlayerContext.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/InPut/IMC_PlayerContext.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/UI/Overlay/WBP_Overlay.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/UI/Overlay/WBP_Overlay.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/UI/ProgressBar/WBP_EnermyHealthBar.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/UI/ProgressBar/WBP_EnermyHealthBar.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/_Game/BluePrints/UI/WidgetController/BP_OverlayWidgetController.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/_Game/BluePrints/UI/WidgetController/BP_OverlayWidgetController.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/_Game/Map/StartMap/1/XZ/99D5VDTIH34IFWBY2PBKW1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/_Game/Map/StartMap/1/XZ/99D5VDTIH34IFWBY2PBKW1.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/_Game/Map/StartMap/2/0C/U27BHH25HDEY0USRTBSDO6.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/_Game/Map/StartMap/D/MB/Y3VEEGJCNPGOAUJE7OROVL.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/_Game/Map/StartMap/D/MB/Y3VEEGJCNPGOAUJE7OROVL.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Demo.Build.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Demo.Build.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AI/BTService_FindNearestPlayer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AI/BTService_FindNearestPlayer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Abilities/PlayerComboAttack.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Abilities/PlayerMeleeAttack.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Abilities/PlayerMeleeAttack.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Data/AttributeInfo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Data/AttributeInfo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Data/CharacterClassInfo.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/Data/CharacterClassInfo.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/ExecCalc/ExecCalc_Damage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/ExecCalc/ExecCalc_Damage.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/PlayerAbilitySystemComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/PlayerAbilitySystemComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/PlayerAbilitySystemLibrary.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/PlayerAbilitySystemLibrary.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/PlayerAttributeSet.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/AbilitySystem/PlayerAttributeSet.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Actor/PlayerEffectActor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Actor/PlayerEffectActor.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Character/CharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Character/CharacterBase.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Character/EnemyCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Character/EnemyCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Character/PlayerCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Character/PlayerCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Components/InventoryComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Components/InventoryComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Components/ItemPickup.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Components/ItemPickup.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Game/MainMenuGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Game/MainMenuGameMode.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Player/MainMenuPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Player/MainMenuPlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/Player/OnePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/Player/OnePlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/PlayerGameplayTags.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/PlayerGameplayTags.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/Inventory/InventoryPanelWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/Inventory/InventoryPanelWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/Inventory/InventorySlotWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/Inventory/InventorySlotWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/Menu/MainMenuWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/Menu/MainMenuWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/Widget/PlayerUserWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/Widget/PlayerUserWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/WidgetController/AttributeMenuWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/WidgetController/AttributeMenuWidgetController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/WidgetController/OverlayWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/WidgetController/OverlayWidgetController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Private/UI/WidgetController/PlayerWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Private/UI/WidgetController/PlayerWidgetController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/AI/BTService_FindNearestPlayer.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/AI/BTService_FindNearestPlayer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/Abilities/PlayerComboAttack.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/Abilities/PlayerMeleeAttack.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/Abilities/PlayerMeleeAttack.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/Data/CharacterClassInfo.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/Data/CharacterClassInfo.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/PlayerAttributeSet.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/AbilitySystem/PlayerAttributeSet.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Character/CharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Character/CharacterBase.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Character/EnemyCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Character/EnemyCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Character/PlayerCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Character/PlayerCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Components/InventoryComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Components/InventoryComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Components/ItemPickup.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Components/ItemPickup.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Components/ItemTypes.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Components/ItemTypes.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/Player/OnePlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/Player/OnePlayerController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/PlayerGameplayTags.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/PlayerGameplayTags.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/UI/Inventory/InventoryPanelWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/UI/Inventory/InventoryPanelWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/UI/Inventory/InventorySlotWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/UI/Inventory/InventorySlotWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/UI/Menu/MainMenuWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/UI/Menu/MainMenuWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/UI/Widget/PlayerUserWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/UI/Widget/PlayerUserWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/UI/WidgetController/AttributeMenuWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/UI/WidgetController/AttributeMenuWidgetController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/UI/WidgetController/OverlayWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/UI/WidgetController/OverlayWidgetController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/input/PlayerInputComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/input/PlayerInputComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Demo/Public/interaction/EnemyInterface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Demo/Public/interaction/EnemyInterface.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,6 +216,23 @@
       <updated>1783421025385</updated>
       <workItem from="1783421028975" duration="183000" />
       <workItem from="1783421234535" duration="3888000" />
+      <workItem from="1783476707656" duration="2704000" />
+      <workItem from="1783503923123" duration="3584000" />
+      <workItem from="1783581630402" duration="3297000" />
+      <workItem from="1783646311695" duration="674000" />
+      <workItem from="1783653976918" duration="717000" />
+      <workItem from="1783668327485" duration="3764000" />
+      <workItem from="1783690627268" duration="701000" />
+      <workItem from="1783699625554" duration="363000" />
+      <workItem from="1783753456015" duration="2290000" />
+      <workItem from="1783823954430" duration="1772000" />
+      <workItem from="1783838454918" duration="519000" />
+      <workItem from="1783843609280" duration="2209000" />
+      <workItem from="1783932057511" duration="2283000" />
+      <workItem from="1783997128997" duration="1431000" />
+      <workItem from="1784016298380" duration="1335000" />
+      <workItem from="1784077334191" duration="5721000" />
+      <workItem from="1784107624505" duration="5765000" />
     </task>
     <task id="LOCAL-00001" summary="新增">
       <option name="closed" value="true" />
@@ -158,7 +242,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783424892521</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="gengxin">
+      <option name="closed" value="true" />
+      <created>1783476934902</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1783476934902</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -169,7 +261,8 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="新增" />
-    <option name="LAST_COMMIT_MESSAGE" value="新增" />
+    <MESSAGE value="gengxin" />
+    <option name="LAST_COMMIT_MESSAGE" value="gengxin" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

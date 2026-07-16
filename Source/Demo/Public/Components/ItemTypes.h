@@ -5,7 +5,7 @@
 #include "ItemTypes.generated.h" 
 
 // ==========================================
-// 物品分类枚举
+// Item categories used by inventory data.
 // ==========================================
 UENUM(BlueprintType)
 enum class EItemType : uint8
@@ -17,7 +17,7 @@ enum class EItemType : uint8
 };
 
 // ==========================================
-// 物品数据表结构体
+// Row format for the item data table.
 // ==========================================
 USTRUCT(BlueprintType)
 struct FItemDataRow : public FTableRowBase

@@ -50,7 +50,7 @@ void UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(const UObject* Worl
     
     if (CharacterClassInfo == nullptr) return;
     
-    // 🔴 修复 1：使用更新后的函数名 GetClassDefaultInfo
+    // Resolve defaults for the requested character class.
     FCharacterClassDefaultInfo ClassDefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
     
     FGameplayEffectContextHandle PrimaryAttributesContextHandle = ASC->MakeEffectContext();
@@ -74,7 +74,7 @@ void UPlayerAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldConte
     UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
     if (CharacterClassInfo == nullptr) return;
     
-    // 🔴 修复 2：修正 CommonAbilities 的拼写
+    // Grant abilities shared by every character class.
     for (TSubclassOf<UGameplayAbility>AbilityClass : CharacterClassInfo->CommonAbilities)
     {
        FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass,1);

@@ -15,6 +15,7 @@ enum class ECharacterClass : uint8
 	longsword,
 	shortsword,
 	remote,
+	Boss
 };
 
 USTRUCT(BlueprintType)
@@ -25,7 +26,7 @@ struct FCharacterClassDefaultInfo
 	UPROPERTY(EditDefaultsOnly, Category="Class Defaults")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
     
-	// 🔴 修复 1：改为正确的 StartupAbilities 数组
+	// Abilities granted when this class is initialized.
 	UPROPERTY(EditDefaultsOnly, Category="Class Defaults")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 };
@@ -39,7 +40,7 @@ class DEMO_API UCharacterClassInfo : public UDataAsset
     
 public:
 	UPROPERTY(EditDefaultsOnly, Category="Character Class Defaults")
-	TMap<ECharacterClass, FCharacterClassDefaultInfo> CharacterClassInformation; // 顺手修了个小拼写 Information
+	TMap<ECharacterClass, FCharacterClassDefaultInfo> CharacterClassInformation;
     
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
@@ -51,7 +52,7 @@ public:
 	TSubclassOf<UGameplayEffect> VitalAttributes;
     
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
-	TArray<TSubclassOf<UGameplayAbility>> CommonAbilities; // 顺手修了个小拼写 Abilities
+	TArray<TSubclassOf<UGameplayAbility>> CommonAbilities;
     
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults|Damage")
 	TObjectPtr<UCurveTable> DamageCalculationCoefficients;

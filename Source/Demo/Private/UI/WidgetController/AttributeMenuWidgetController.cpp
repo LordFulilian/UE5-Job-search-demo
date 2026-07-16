@@ -8,13 +8,13 @@
 
 void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 {
-    // 🔴 养成好习惯：即使里面暂时没写东西，只要重写了父类虚函数，第一行永远先喊父类
+    // Bind dependencies owned by the base controller first.
     Super::BindCallbacksToDependencies();
 }
 
 void UAttributeMenuWidgetController::BroadcastInitialValues()
 {
-    // 🔴 关键修复：先让基类把“等级(Level)”等全局通用数据发出去！
+    // Broadcast shared values such as player level first.
     Super::BroadcastInitialValues();
     
     UPlayerAttributeSet *AS = CastChecked<UPlayerAttributeSet>(AttributeSet);
@@ -23,77 +23,77 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
     
     if (AOPlayerState* OPlayerState = Cast<AOPlayerState>(PlayerState))
     {
-        // 1. 去你配好的 DataAsset 里，把“名字”和“标签”取出来
+        // Resolve display metadata from the configured data asset.
         FPlayerAttributeInfo LevelInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_PlayerLevel);
         
-        // 2. 把“数值”塞进快递盒
+        // Attach the current numeric value.
         LevelInfo.AttributeValue = OPlayerState->GetPlayerLevel();
         
-        // 3. 走通用属性频道，把完整的快递盒广播给 UI！
+        // Broadcast the completed attribute payload.
         AttributeInfoDelegate.Broadcast(LevelInfo);
     }
     
-    /* --- Vital Attributes (核心生存属性) --- */
+    /* Vital attributes. */
     
-    // 1. Health (当前生命值)
+    // Health.
     FPlayerAttributeInfo HealthInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Vital_Health);
     HealthInfo.AttributeValue = AS->GetHealth();
     AttributeInfoDelegate.Broadcast(HealthInfo);
 
-    // 2. MaxHealth (最大生命值)
+    // Maximum health.
     FPlayerAttributeInfo MaxHealthInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Vital_MaxHealth);
     MaxHealthInfo.AttributeValue = AS->GetMaxHealth();
     AttributeInfoDelegate.Broadcast(MaxHealthInfo);
 
-    /* --- Primary Attributes (一级属性) --- */
+    /* Primary attributes. */
 
-    // 3. Attack (攻击力)
+    // Attack.
     FPlayerAttributeInfo AttackInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Primary_Attack);
     AttackInfo.AttributeValue = AS->GetAttack();
     AttributeInfoDelegate.Broadcast(AttackInfo);
 
-    // 4. Defense (防御力)
+    // Defense.
     FPlayerAttributeInfo DefenseInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Primary_Defense);
     DefenseInfo.AttributeValue = AS->GetDefense();
     AttributeInfoDelegate.Broadcast(DefenseInfo);
 
-    /* --- Secondary Attributes (二级属性) --- */
+    /* Secondary attributes. */
 
-    // 5. CritRate (暴击率)
+    // Critical-hit rate.
     FPlayerAttributeInfo CritRateInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Secondary_CritRate);
     CritRateInfo.AttributeValue = AS->GetCritRate();
     AttributeInfoDelegate.Broadcast(CritRateInfo);
 
-    // 6. CritDamage (暴击伤害)
+    // Critical-hit damage.
     FPlayerAttributeInfo CritDamageInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Secondary_CritDamage);
     CritDamageInfo.AttributeValue = AS->GetCritDamage();
     AttributeInfoDelegate.Broadcast(CritDamageInfo);
 
-    // 7. EnergyRegen (共鸣效率/充能效率)
+    // Energy regeneration.
     FPlayerAttributeInfo EnergyRegenInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Secondary_EnergyRegen);
     EnergyRegenInfo.AttributeValue = AS->GetEnergyRegen();
     AttributeInfoDelegate.Broadcast(EnergyRegenInfo);
 
-    /* --- Damage Bonus Attributes (三级属性) --- */
+    /* Damage-bonus attributes. */
 
-    // 8. SkillDamageBonus (技能伤害加成)
+    // Skill damage bonus.
     FPlayerAttributeInfo SkillDamageBonusInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_DamageBonus_SkillDamageBonus);
     SkillDamageBonusInfo.AttributeValue = AS->GetSkillDamageBonus();
     AttributeInfoDelegate.Broadcast(SkillDamageBonusInfo);
     
-    /* --- Resistance Attributes (抗性属性) --- */
+    /* Resistance attributes. */
 
-    // 9. Fire Resistance (火抗性)
+    // Fire resistance.
     FPlayerAttributeInfo FireResistInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Resistance_Fire);
     FireResistInfo.AttributeValue = AS->GetFireResistance();
     AttributeInfoDelegate.Broadcast(FireResistInfo);
 
-    // 10. Ice Resistance (冰抗性)
+    // Ice resistance.
     FPlayerAttributeInfo IceResistInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Resistance_Ice);
     IceResistInfo.AttributeValue = AS->GetIceResistance();
     AttributeInfoDelegate.Broadcast(IceResistInfo);
 
-    // 11. Physical Resistance (物理抗性)
+    // Physical resistance.
     FPlayerAttributeInfo PhysicalResistInfo = AttributeInfo->FindAttributeInfoForTag(FPlayerGameplayTags::Get().Attributes_Resistance_Physical);
     PhysicalResistInfo.AttributeValue = AS->GetPhysicalResistance();
     AttributeInfoDelegate.Broadcast(PhysicalResistInfo);

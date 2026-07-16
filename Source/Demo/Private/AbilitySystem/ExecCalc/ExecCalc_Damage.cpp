@@ -23,21 +23,21 @@ struct PlayerDamageStatics
     
     PlayerDamageStatics()
     {
-       // --- 攻击方属性 (Source) ---
+       // Source attributes.
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, Attack, Source, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, CritRate, Source, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, CritDamage, Source, false); 
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, EnergyRegen, Source, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, SkillDamageBonus, Source, false); 
        
-       // --- 防御方属性 (Target) ---
+       // Target attributes.
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, Defense, Target, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, FireResistance, Target, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, IceResistance, Target, false);
        DEFINE_ATTRIBUTE_CAPTUREDEF(UPlayerAttributeSet, PhysicalResistance, Target, false);
     }
 
-    // 懒加载机制，确保标签单例初始化完成后再读取字典
+    // Build this map lazily after native gameplay tags are initialized.
     const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& GetTagsToCaptureDefs() const
     {
         static TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagsToCaptureDefs;
@@ -84,6 +84,11 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     
     AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
     AActor* TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
+
+	if (TargetASC && TargetASC->HasMatchingGameplayTag(FPlayerGameplayTags::Get().State_Invulnerable))
+	{
+		return;
+	}
     
     ICombatInterface* SourceCombatInterface = Cast<ICombatInterface>(SourceAvatar);
     ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(TargetAvatar);
@@ -96,7 +101,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     EvaluateParameters.SourceTags = SourceTags;
     EvaluateParameters.TargetTags = TargetTags;
     
-    // 1. 动态遍历多属性伤害，并计算元素抗性减免
+    // Sum each configured damage type after resistance mitigation.
     float BaseDamage = 0.f; 
     
     for (const TTuple<FGameplayTag, FGameplayTag>& Pair : FPlayerGameplayTags::Get().DamageTypesToResistances)
@@ -107,7 +112,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         checkf(DamageStatics().GetTagsToCaptureDefs().Contains(ResistanceTag), TEXT("TagsToCaptureDefs 字典里漏了标签: [%s]！"), *ResistanceTag.ToString());
         const FGameplayEffectAttributeCaptureDefinition CaptureDef = DamageStatics().GetTagsToCaptureDefs()[ResistanceTag];
         
-        // 🔴 修复警告：传入 false 和 0.f 作为找不到标签时的默认处理，彻底消除红字报错
+        // Missing SetByCaller magnitudes contribute zero damage.
         float DamageTypeValue = Spec.GetSetByCallerMagnitude(DamageTypeTag, false, 0.f);
 
         float Resistance = 0.f;
@@ -119,24 +124,24 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         BaseDamage += DamageTypeValue;
     }
     
-    // 2. 抓取防御力 (Target)
+    // Capture target defense.
     float Defense = 0.f;
     ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DefenseDef, EvaluateParameters, Defense);
     Defense = FMath::Max<float>(0.f, Defense);
     
-    // 3. 抓取攻击力 (Source)
+    // Capture source attack.
     float Attack = 0.f;
     ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().AttackDef, EvaluateParameters, Attack);
     Attack = FMath::Max<float>(0.f, Attack);
     
-    // 4. 抓取暴击率 (Source)
+    // Capture source critical-hit rate.
     float CritRate = 0.f;
     ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CritRateDef, EvaluateParameters, CritRate);
     CritRate = FMath::Max<float>(0.f, CritRate);
     
     UE_LOG(LogTemp, Warning, TEXT("【GAS 调试】成功抓取到 Source(攻击者) 的面板暴击率: %f"), CritRate);
 
-    // 5. 初步融合：扣除抗性后的魔法伤害 + 面板物理攻击力
+    // Scale mitigated base damage by the source attack percentage.
     // BaseDamage is the SetByCaller value (e.g. from curve table). Attack acts as a percentage bonus.
     float TotalDamage = BaseDamage * (1.0f + Attack / 100.0f);
      
@@ -156,8 +161,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         }
     } 
     
-    // 7. 暴击判定 
-    // 🔴 修复区间：按小数计算 (0.0 到 1.0)。填 0.05 就是 5% 的真实概率
+    // Roll critical hits using a probability in the [0, 1] range.
     const bool bCriticalHit = FMath::RandRange(0.f, 1.f) < CritRate;
     FGameplayEffectContextHandle EffectContextHandle = Spec.GetContext();
     FGameplayEffectContext* Context = EffectContextHandle.Get();
@@ -169,25 +173,24 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
         float CritDamage = 0.f;
         ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CritDamageDef, EvaluateParameters, CritDamage);
         
-        // 🔴 流派 B 逻辑：保底不能是负增伤 (最低为 0)
+        // Critical bonus damage cannot be negative.
         CritDamage = FMath::Max<float>(0.f, CritDamage); 
         
-        // 🔴 流派 B 逻辑：总伤害 = 现有总伤害 + (现有总伤害 * (暴击伤害百分比 / 100))
-        // 例如：暴击伤害填了 50，相当于加成 50%。100点伤害触发暴击后 = 100 + (100 * 0.5) = 150
+        // CritDamage is an additional percentage; 50 produces 150% total damage.
         TotalDamage += (TotalDamage * (CritDamage / 100.f)); 
     }
     
-    // 8. 执行减伤公式 
+    // Apply defense mitigation.
     if (Defense > 0.f)
     {
        TotalDamage *= (DefenseCoefficient / (DefenseCoefficient + Defense));
     }
     
-    // 9. 构造修改器，输出最终伤害给 AttributeSet
+    // Send final damage through the IncomingDamage meta attribute.
     const FGameplayModifierEvaluatedData EvaluatedData(UPlayerAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, TotalDamage);
     OutExecutionOutput.AddOutputModifier(EvaluatedData);
     
-    // 10. 调试日志
+    // Emit detailed combat diagnostics.
     UE_LOG(LogTemp, Warning, TEXT("【GAS 伤害结算】基础魔伤:%f, 攻击力:%f, 暴击率:%f, 是否暴击:%s, 目标防御:%f, 最终伤害:%f"), 
         BaseDamage, 
         Attack, 

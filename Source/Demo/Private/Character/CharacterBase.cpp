@@ -14,9 +14,8 @@ ACharacterBase::ACharacterBase()
  	
 	PrimaryActorTick.bCanEverTick = false;
 
-	//创建武器骨骼网络
+	// Create and attach the weapon mesh.
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
-	//将武器附加到角色的手部插槽上
 	Weapon->SetupAttachment(GetMesh(), "WeaponHandSocket");
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -45,7 +44,7 @@ void ACharacterBase::Die()
 
 	if (DeathMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
-		// Bind ragdoll to montage end — no timer gap, no "stand up" frame
+		// Enter ragdoll immediately when the death montage completes.
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindWeakLambda(this, [this](UAnimMontage* Montage, bool bInterrupted)
 		{
@@ -123,7 +122,6 @@ void ACharacterBase::AddCharacterAbilities()
 	
 	PlayerASC->AddCharacterAbilities(StartupAbilities);
 }
-
 
 
 

@@ -1,121 +1,108 @@
-
-
 #include "Actor/PlayerEffectActor.h"
-#include  "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
-
-
 
 APlayerEffectActor::APlayerEffectActor()
 {
- 	
-	PrimaryActorTick.bCanEverTick = false;
-	
-	SetRootComponent(CreateDefaultSubobject<USceneComponent>("RootSceneComponent"));
+    PrimaryActorTick.bCanEverTick = false;
+    SetRootComponent(CreateDefaultSubobject<USceneComponent>("RootSceneComponent"));
 }
-
 
 void APlayerEffectActor::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
 }
 
 void APlayerEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
 {
-	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies)return;
-	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-	if (TargetASC == nullptr)return;
-	
-	check(GameplayEffectClass)
-	FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectClass,ActorLevel,EffectContextHandle);
-	const FActiveGameplayEffectHandle ActiveEffectHandle =  TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
-	
-	const bool bIsInfinite = EffectSpecHandle.Data.Get()->Def.Get()->DurationPolicy == EGameplayEffectDurationType::Infinite;
-	if (bIsInfinite && InfiniteEffectRemovalPolicy == EEffectRemovalPolicy::RemoveOnOverlap )
-	{
-		ActiveEffectHandles.Add(ActiveEffectHandle,TargetASC);
-	}
+    if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies) return;
 
-	if (!bIsInfinite)
-	{
-		Destroy();
-	}
+    UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+    if (TargetASC == nullptr) return;
+
+    check(GameplayEffectClass)
+    FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
+    EffectContextHandle.AddSourceObject(this);
+    const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectClass, ActorLevel, EffectContextHandle);
+    const FActiveGameplayEffectHandle ActiveEffectHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+
+    const bool bIsInfinite = EffectSpecHandle.Data.Get()->Def.Get()->DurationPolicy == EGameplayEffectDurationType::Infinite;
+    if (bIsInfinite && InfiniteEffectRemovalPolicy == EEffectRemovalPolicy::RemoveOnOverlap)
+    {
+        ActiveEffectHandles.Add(ActiveEffectHandle, TargetASC);
+    }
+
+    if (!bIsInfinite)
+    {
+        Destroy();
+    }
 }
 
 void APlayerEffectActor::OnOverlap(AActor* TargetActor)
 {
-	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies)return;
-	
-    // 1. 瞬间效果 (Instant)
+    if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies) return;
+
+    // Apply instant effects configured for overlap entry.
     if (InstantEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnOverlap)
     {
-       ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);
+        ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);
     }
-    
-    // 2. 持续效果 (Duration)
+
+    // Apply duration effects configured for overlap entry.
     if (DurationEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnOverlap)
     {
-       ApplyEffectToTarget(TargetActor, DurationGameplayEffectClass);
+        ApplyEffectToTarget(TargetActor, DurationGameplayEffectClass);
     }
-    
-    // 3. 【你漏掉的】无限效果 (Infinite)
+
+    // Apply infinite effects configured for overlap entry.
     if (InfiniteEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnOverlap)
     {
-       ApplyEffectToTarget(TargetActor, InfiniteGameplayEffectClass);
+        ApplyEffectToTarget(TargetActor, InfiniteGameplayEffectClass);
     }
 }
 
 void APlayerEffectActor::OnEndOverlap(AActor* TargetActor)
 {
-	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies)return;
-	
-    // 1. 【修复】离开时触发瞬间效果 
+    if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectsToEnemies) return;
+
+    // Apply instant effects configured for overlap exit.
     if (InstantEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnEndOverlap)
     {
-       ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);
+        ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);
     }
-    
-    // 2. 【修复】离开时触发持续效果
+
+    // Apply duration effects configured for overlap exit.
     if (DurationEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnEndOverlap)
     {
-       ApplyEffectToTarget(TargetActor, DurationGameplayEffectClass);
+        ApplyEffectToTarget(TargetActor, DurationGameplayEffectClass);
     }
-    
-    // 3. 【你漏掉的】离开时触发无限效果
+
+    // Apply infinite effects configured for overlap exit.
     if (InfiniteEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnEndOverlap)
     {
-       ApplyEffectToTarget(TargetActor, InfiniteGameplayEffectClass);
+        ApplyEffectToTarget(TargetActor, InfiniteGameplayEffectClass);
     }
 
-    // 4. 离开时移除无限效果的逻辑
-    if (InfiniteEffectRemovalPolicy == EEffectRemovalPolicy::RemoveOnOverlap) // (注：这里你的枚举名虽然叫Overlap，但写在EndOverlap里逻辑是合理的)
+    // Remove infinite effects owned by the actor leaving the overlap.
+    if (InfiniteEffectRemovalPolicy == EEffectRemovalPolicy::RemoveOnOverlap)
     {
-       UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-       if (!IsValid(TargetASC)) return;
-       
-       // 在这里声明这个空数组，当做“垃圾桶”
-       TArray<FActiveGameplayEffectHandle> HandlesToRemove; 
-       
-       for (TTuple<FActiveGameplayEffectHandle, UAbilitySystemComponent*> HandlePair : ActiveEffectHandles)
-       {
-          if (TargetASC == HandlePair.Value)
-          {
-             // 告诉 GAS 系统：把玩家身上的这个效果拿掉！
-             TargetASC->RemoveActiveGameplayEffect(HandlePair.Key, 1);
-             
-             // 把要删的 Handle 记录到垃圾桶数组里
-             HandlesToRemove.Add(HandlePair.Key); 
-          }
-       }
-       
-       // 遍历垃圾桶，把我们自己的 Map 里的记录也清理干净
-       for (FActiveGameplayEffectHandle& Handle : HandlesToRemove)
-       {
-          ActiveEffectHandles.Remove(Handle);
-       }
+        UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+        if (!IsValid(TargetASC)) return;
+
+        TArray<FActiveGameplayEffectHandle> HandlesToRemove;
+        for (TTuple<FActiveGameplayEffectHandle, UAbilitySystemComponent*> HandlePair : ActiveEffectHandles)
+        {
+            if (TargetASC == HandlePair.Value)
+            {
+                TargetASC->RemoveActiveGameplayEffect(HandlePair.Key, 1);
+                HandlesToRemove.Add(HandlePair.Key);
+            }
+        }
+
+        // Remove map entries after iteration to avoid invalidating the iterator.
+        for (FActiveGameplayEffectHandle& Handle : HandlesToRemove)
+        {
+            ActiveEffectHandles.Remove(Handle);
+        }
     }
 }
-

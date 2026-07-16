@@ -6,16 +6,16 @@
 void UPlayerUserWidget::SetWidgetController(UObject* InWidgetController)
 {
 	WidgetController = InWidgetController;
-	// 触发蓝图可重写的事件
+	// Let the Blueprint bind to its newly assigned controller.
 	WidgetControllerSet(); 
 }
 
-// 1. 使用 NativeOnInitialized 替代 NativeConstruct
+// Bind native events once for the lifetime of the widget.
 void UPlayerUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	// 整个生命周期只绑定一次，彻底解决第二次打开没反应的问题
+	// NativeOnInitialized avoids duplicate bindings across repeated opens.
 	if (close)
 	{
 		close->OnClicked.AddDynamic(this, &UPlayerUserWidget::OnCloseButtonClicked);
@@ -32,20 +32,20 @@ void UPlayerUserWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-// 2. 升级关闭逻辑，区分主面板和二级面板
+// Main panels restore game input; child panels only remove themselves.
 void UPlayerUserWidget::OnCloseButtonClicked()
 {
 	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwningPlayerPawn()))
 	{
-		// 【核心判断】：判断当前的 UI 实例 (this) 是不是角色身上存的那个主面板
+		// Compare against the main panel cached by the character.
 		if (PlayerChar->CharacterPanelInstance == this)
 		{
-			// 如果我是主面板，我就走一套完整的关闭+恢复游戏流程
+			// The character owns the full close and input-restoration flow.
 			PlayerChar->ToggleOpenPanelAction();
 		}
 		else
 		{
-			// 如果我不是主面板（说明我是个二级页面），我只负责把自己关掉
+			// Secondary panels can remove themselves directly.
 			this->RemoveFromParent();
 		}
 	}

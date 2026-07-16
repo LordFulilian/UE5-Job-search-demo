@@ -1,0 +1,18 @@
+[
+  {
+    "Name": "MaxHealth",
+    "1": 3000.0
+  },
+  {
+    "Name": "Attack",
+    "1": 100.0
+  },
+  {
+    "Name": "Defense",
+    "1": 50.0
+  },
+  {
+    "Name": "CritRate",
+    "1": 0.1
+  }
+]

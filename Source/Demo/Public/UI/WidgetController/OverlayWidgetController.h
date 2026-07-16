@@ -8,6 +8,9 @@
 #include "Components/ExpComponent.h" 
 #include "OverlayWidgetController.generated.h"
 
+// Forward declarations avoid circular includes for UI data assets.
+class UAbilityInfo;
+class UHeroUIInfo;
 
 USTRUCT(BlueprintType)
 struct FUIWidgetRow : public FTableRowBase
@@ -27,7 +30,6 @@ struct FUIWidgetRow : public FTableRowBase
     UTexture2D* Image = nullptr;
 };
 
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSignature, FUIWidgetRow, Row);
 
@@ -42,7 +44,6 @@ public:
     virtual void BroadcastInitialValues() override;
     virtual void BindCallbacksToDependencies() override;
     
-
     UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
     FOnExperienceChangedSignature OnXPChangedDelegate;
 
@@ -62,7 +63,17 @@ protected:
     
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
     TObjectPtr<UDataTable> MessageWidgetDataTable;
-    
+
+    // ========================================================
+    // Static data exposed to the overlay Blueprint.
+    // ========================================================
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data|Abilities")
+    TObjectPtr<UAbilityInfo> AbilityInfoDataAsset;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data|Party")
+    TObjectPtr<UHeroUIInfo> PartyInfoDataAsset;
+    // ========================================================
+
     UFUNCTION()
     void XPChangedCallback(int32 CurrentXP, int32 XPToNext);
 

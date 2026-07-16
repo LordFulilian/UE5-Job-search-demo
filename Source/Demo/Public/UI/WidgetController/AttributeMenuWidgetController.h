@@ -21,7 +21,7 @@ public:
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
     
-	// UI 蓝图会监听这个委托来生成界面
+	// UI Blueprints listen to this delegate to populate attribute entries.
 	UPROPERTY(BlueprintAssignable, Category="GAS|Attributes")
 	FAttributeInfoSignature AttributeInfoDelegate;
     

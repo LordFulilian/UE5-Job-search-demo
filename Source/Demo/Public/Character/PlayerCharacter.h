@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Character/CharacterBase.h" 
+#include "Character/CharacterBase.h"
 #include "InputActionValue.h"
 #include "GameplayTagContainer.h"
 #include "input/PlayerInputConfig.h"
@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputAction;
 class UInventoryPanelWidget;
 class UInventoryComponent;
+class UAnimMontage;
 
 UCLASS()
 class DEMO_API APlayerCharacter : public ACharacterBase
@@ -29,11 +30,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ToggleOpenPanelAction();
 
-    // ? 这一行声明就是解开报错的关键！
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ToggleInventoryPanelAction();
 
-    // 加上 BlueprintReadOnly，允许外部安全地读取当前面板实例
+    // Active character panel instance exposed for UI coordination.
     UPROPERTY(BlueprintReadOnly, Category = "UI")
     UUserWidget* CharacterPanelInstance;
 
@@ -44,14 +44,12 @@ protected:
     virtual void InitAbilityActorInfo() override;
     virtual int32 GetPlayerLevel() override;
 
-    // --- 组件 ---
     UPROPERTY(VisibleAnywhere)
     USpringArmComponent* CameraBoom;
 
     UPROPERTY(VisibleAnywhere)
     UCameraComponent* FollowCamera;
 
-    // --- 输入 Action ---
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* MoveAction;
     UPROPERTY(EditAnywhere, Category = "Input")
@@ -61,48 +59,57 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* SprintAction;
     UPROPERTY(EditAnywhere, Category = "Input")
+    UInputAction* DashAction;
+    UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* JumpAction;
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* OpenPanelAction;
     UPROPERTY(EditAnywhere, Category = "Input")
-    UInputAction* LockAction; 
+    UInputAction* LockAction;
     UPROPERTY(EditAnywhere, Category = "Input")
-    UInputAction* InteractAction; // 交互/拾取按键
-    
-    // ? 背包输入动作
+    UInputAction* InteractAction;
     UPROPERTY(EditAnywhere, Category = "Input")
     UInputAction* OpenInventoryAction;
-    
+
     UPROPERTY(EditDefaultsOnly, Category = "UI|Inventory")
     TSubclassOf<UInventoryPanelWidget> InventoryPanelClass;
 
-    // 3. 用来缓存生成的面板实例
+    // Cached inventory panel instance reused across open and close operations.
     UPROPERTY()
     TObjectPtr<UInventoryPanelWidget> InventoryPanelInstance;
-  
 
     UPROPERTY(EditDefaultsOnly, Category = "Input")
     TObjectPtr<UPlayerInputConfig> InputConfig;
-    
-    // --- 输入回调函数 ---
+
+    // Native input callbacks.
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
     void Zoom(const FInputActionValue& Value);
+    void Dash();
     void SprintStart();
     void SprintStop();
     void Interact();
-    
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+    float WalkSpeed = 400.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+    float SprintSpeed = 1000.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+    float DashSpeed = 1400.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Animation")
+    TObjectPtr<UAnimMontage> DashMontage;
+
     void AbilityInputTagPressed(FGameplayTag InputTag);
     void AbilityInputTagReleased(FGameplayTag InputTag);
     void AbilityInputTagHeld(FGameplayTag InputTag);
-    
-    UPROPERTY(EditAnywhere, Category = "UI")
-    TSubclassOf< UUserWidget> CharacterPanelClass;
- 
 
-    // ==========================================
-    // 锁定系统核心变量与函数
-    // ==========================================
+    UPROPERTY(EditAnywhere, Category = "UI")
+    TSubclassOf<UUserWidget> CharacterPanelClass;
+
+    // Lock-on targeting.
     AActor* FindBestTarget();
     void ToggleLockOn();
 
@@ -113,5 +120,8 @@ protected:
     bool bIsHardLocked = false;
 
     UPROPERTY(EditDefaultsOnly, Category = "Combat")
-    float LockTargetRadius = 1500.f; // 扫描半径
+    float LockTargetRadius = 1500.f; // Target scan radius.
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+    float InteractionDistance = 350.f;
 };

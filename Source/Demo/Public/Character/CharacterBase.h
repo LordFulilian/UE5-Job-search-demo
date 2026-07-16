@@ -35,7 +35,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 
-	// 武器骨骼网络
+	// Weapon mesh attached to the character skeleton.
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
 

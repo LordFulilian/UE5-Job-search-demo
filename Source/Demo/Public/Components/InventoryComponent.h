@@ -3,12 +3,12 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
-#include "GameplayEffect.h" // GAS：为了使用 UGameplayEffect
+#include "GameplayEffect.h" // Required for item effects.
 #include "Components/ItemTypes.h"
 #include "InventoryComponent.generated.h"
 
 // =========================================================================
-// 1. 静态数据表结构体 (定义物品DNA)
+// Static item definition stored in a data table.
 // =========================================================================
 USTRUCT(BlueprintType)
 struct FItemStaticData : public FTableRowBase
@@ -31,15 +31,15 @@ struct FItemStaticData : public FTableRowBase
     EItemType ItemType;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Data")
-    int32 MaxStackSize = 99; // 最大堆叠数量
+    int32 MaxStackSize = 99; // Maximum items per stack.
 
-    // 🔴 GAS 联动核心：如果是药水，使用时给玩家赋予哪个 Gameplay Effect？
+    // Effect applied when a consumable is used.
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|GAS")
     TSubclassOf<class UGameplayEffect> UsedGameplayEffect;
 };
 
 // =========================================================================
-// 2. 动态格子结构体 (定义背包里的一个槽位)
+// Runtime state for one inventory slot.
 // =========================================================================
 USTRUCT(BlueprintType)
 struct FInventorySlot
@@ -47,24 +47,24 @@ struct FInventorySlot
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory|Slot")
-    FName ItemID = NAME_None; // 默认是没有物品
+    FName ItemID = NAME_None; // NAME_None marks an empty slot.
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory|Slot")
     int32 Quantity = 0;
     
-    // 辅助函数：判断格子是否为空
+    // Returns whether this slot contains no item.
     bool IsEmpty() const { return ItemID == NAME_None || Quantity <= 0; }
 };
 
-// UI 广播委托 (当背包变动时，立刻大喇叭通知 UMG 刷新界面)
+// Notifies UMG whenever inventory contents change.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 
 
 // =========================================================================
-// 3. 背包组件核心类
+// Inventory component owned by the player.
 // =========================================================================
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class DEMO_API UInventoryComponent : public UActorComponent// ⚠️注意：把 YOURPROJECT_API 换成你实际的项目宏，比如 DEMO_API
+class DEMO_API UInventoryComponent : public UActorComponent
 {
     GENERATED_BODY()
 
@@ -75,32 +75,32 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    // --- 核心配置 ---
+    // Configuration.
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Config")
-    int32 InventoryCapacity = 20; // 默认20个格子
+    int32 InventoryCapacity = 20; // Number of available slots.
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory|Config")
-    UDataTable* ItemDataTable; // 将在蓝图里填入我们配好的数据表
+    UDataTable* ItemDataTable; // Configured by the owning Blueprint.
 
-    // --- 运行时数据 ---
+    // Runtime state.
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory|State")
     TArray<FInventorySlot> InventorySlots;
 
-    // --- 广播事件 ---
+    // Change notifications.
     UPROPERTY(BlueprintAssignable, Category = "Inventory|Events")
     FOnInventoryUpdated OnInventoryUpdated;
 
-    // --- 核心 API (暴露给蓝图调用) ---
+    // Blueprint API.
     
-    // 获取物品静态数据 (从数据表中查询)
+    // Looks up static item data.
     UFUNCTION(BlueprintCallable, Category = "Inventory|Logic")
     bool GetItemStaticData(FName ItemID, FItemStaticData& OutItemData);
     
-    // 添加物品 (处理堆叠与寻找空位)
+    // Adds an item using existing stacks before empty slots.
     UFUNCTION(BlueprintCallable, Category = "Inventory|Logic")
     bool AddItem(FName ItemID, int32 Amount);
 
-    // 使用物品 (GAS 联动触发口)
+    // Consumes an item and applies its configured GAS effect.
     UFUNCTION(BlueprintCallable, Category = "Inventory|Logic")
     bool UseItemAtIndex(int32 SlotIndex);
 };

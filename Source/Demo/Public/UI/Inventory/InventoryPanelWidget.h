@@ -10,7 +10,7 @@ class UInventoryComponent;
 class UInventorySlotWidget;
 class UTextBlock;
 class UImage;
-class UButton; // 🔴 新增：按钮前向声明
+class UButton;
 
 UCLASS()
 class DEMO_API UInventoryPanelWidget : public UPlayerUserWidget
@@ -21,7 +21,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Inventory UI")
     void InitializePanel(UInventoryComponent* InInventoryComp);
 
-    // 保留原本的全局刷新（比如刚打开背包时，默认刷新所有物品或指定分类）
+    // Rebuilds the inventory using an optional category filter.
     UFUNCTION(BlueprintCallable, Category = "Inventory UI")
     void RefreshInventoryUI();
 
@@ -32,10 +32,10 @@ public:
     void UpdateDetailPanel(FName SelectedItemID);
 
 protected:
-    virtual void NativeConstruct() override; // 🔴 新增：用于绑定按钮事件
+    virtual void NativeConstruct() override;
 
     // ==========================================
-    // 🔴 新增：顶部的分类页签按钮 (名字需与蓝图一致)
+    // Category tabs bound by matching Designer names.
     // ==========================================
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UButton> Btn_CategoryMaterial;
@@ -46,7 +46,7 @@ protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UButton> Btn_CategoryQuest;
 
-    // --- 原始 UI 控件 ---
+    // Inventory controls.
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UWrapBox> Grid_Slots;
 
@@ -67,7 +67,7 @@ protected:
 
 private:
     // ==========================================
-    // 🔴 新增：核心过滤刷新函数
+    // Applies a category filter and rebuilds visible slots.
     // ==========================================
     void RefreshInventoryByFilter(EItemType FilterType);
 

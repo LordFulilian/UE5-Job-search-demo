@@ -2,7 +2,7 @@
 
 #include "AbilitySystem/Data/AttributeInfo.h"
 
-FPlayerAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& AttributesTag, bool bLogNotFound) const // 🌟 这里同步修改
+FPlayerAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& AttributesTag, bool bLogNotFound) const
 {
 	for (const FPlayerAttributeInfo& Info : AttributeInformation)
 	{

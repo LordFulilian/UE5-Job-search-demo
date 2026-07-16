@@ -16,14 +16,14 @@ void UPlayerAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclass
 {
 	for (const TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilities)
 	{
+		if (!AbilityClass) continue;
+
 		 FGameplayAbilitySpec AbilitySpec =  FGameplayAbilitySpec(AbilityClass,1);
 		 if (const UPlayerGameplayAbility* PlayerAbility = Cast<UPlayerGameplayAbility>(AbilitySpec.Ability))
 		 {
 		 	AbilitySpec.GetDynamicSpecSourceTags().AddTag(PlayerAbility->StartupInputTag);
-		 	GiveAbility(AbilitySpec);
 		 }
-		
-		
+		 GiveAbility(AbilitySpec);
 	}
 }
 

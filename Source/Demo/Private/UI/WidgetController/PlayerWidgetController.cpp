@@ -18,7 +18,7 @@ void UPlayerWidgetController::BroadcastInitialValues()
 	if (AOPlayerState* OPlayerState = Cast<AOPlayerState>(PlayerState))
 	{
 		const int32 CurrentLevel = OPlayerState->GetPlayerLevel();
-		// 向所有子类的 UI 发射等级数据！
+		// Broadcast the current level to all dependent widgets.
 		OnPlayerLevelChanged.Broadcast(CurrentLevel);
 	}
 

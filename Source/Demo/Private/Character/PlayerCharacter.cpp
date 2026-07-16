@@ -1,6 +1,6 @@
 ﻿#include "Character/PlayerCharacter.h"
 
-// 【核心头文件】
+// Core character dependencies.
 #include "GameFramework/SpringArmComponent.h" 
 #include "Camera/CameraComponent.h"           
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
@@ -22,6 +22,7 @@
 #include "UI/Inventory/InventoryPanelWidget.h"
 #include "input/PlayerInputComponent.h" 
 #include "interaction/EnemyInterface.h" 
+#include "interaction/InteractableInterface.h"
 
 void APlayerCharacter::OnRep_PlayerState()
 {
@@ -31,7 +32,7 @@ void APlayerCharacter::OnRep_PlayerState()
 
 APlayerCharacter::APlayerCharacter()
 {
-    // 设置角色的旋转逻辑 (二游经典设置：身体不随相机转，随移动方向转)
+    // Face movement direction independently of camera rotation.
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
@@ -90,7 +91,7 @@ void APlayerCharacter::InitAbilityActorInfo()
     AttributeSet = OPlayerState->GetAttributeSet();
     
     // ==========================================
-    // 初始化属性 (让血条和攻击力变成非 0)
+    // Initialize attributes before the overlay reads them.
     // ==========================================
     InitialzeDefaultAttributes();
     
@@ -111,7 +112,7 @@ void APlayerCharacter::InitAbilityActorInfo()
     } 
     
     // ==========================================
-    // 赋予初始技能 (让左键平A生效)
+    // Grant startup abilities, including the primary attack.
     // ==========================================
     if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent))
     {
@@ -130,10 +131,15 @@ void APlayerCharacter::InitAbilityActorInfo()
 void APlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+    {
+        MovementComponent->MaxWalkSpeed = WalkSpeed;
+    }
 }
 
 // ==========================================
-// 输入绑定核心逻辑
+// Input bindings.
 // ==========================================
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -141,13 +147,13 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     
     UPlayerInputComponent* AuraInputComponent = CastChecked<UPlayerInputComponent>(PlayerInputComponent);
 
-    // 绑定 GAS 技能动作
+    // Bind tag-driven GAS actions.
     if (InputConfig)
     {
         AuraInputComponent->BindAbilityAction(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
     }
 
-    // 绑定基础动作
+    // Bind native character actions.
     if (MoveAction)
         AuraInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
@@ -161,7 +167,11 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     {
         AuraInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SprintStart);
         AuraInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::SprintStop);
+        AuraInputComponent->BindAction(SprintAction, ETriggerEvent::Canceled, this, &APlayerCharacter::SprintStop);
     }
+
+    if (DashAction)
+        AuraInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Dash);
 
     if (JumpAction)
     {
@@ -169,21 +179,25 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
         AuraInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
     }
     
-    // 绑定交互/拾取
+    // Bind interaction and pickup input.
     if (InteractAction)
     {
-        AuraInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Interact);
+        AuraInputComponent->BindAction(
+     InteractAction,
+     ETriggerEvent::Started,
+     this,
+     &APlayerCharacter::Interact);
     }
 
-    // 绑定锁定
+    // Bind lock-on input.
     if (LockAction)
         AuraInputComponent->BindAction(LockAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleLockOn);
 
-    // 🔴 角色面板开启键
+    // Bind the character-panel toggle.
     if (OpenPanelAction)
         AuraInputComponent->BindAction(OpenPanelAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleOpenPanelAction);
           
-    // 🔴 背包面板开启键
+    // Bind the inventory-panel toggle.
     if (OpenInventoryAction)
         AuraInputComponent->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleInventoryPanelAction);
 }
@@ -237,16 +251,69 @@ void APlayerCharacter::Zoom(const FInputActionValue& Value)
 
 void APlayerCharacter::SprintStart()
 {
-    if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = 1000.f; 
+    if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
 
 void APlayerCharacter::SprintStop()
 {
-    if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = 400.f; 
+    if (GetCharacterMovement()) GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void APlayerCharacter::Dash()
+{
+    UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+    if (DashMontage)
+    {
+        PlayAnimMontage(DashMontage);
+    }
+    if (!MovementComponent)
+    {
+        return;
+    }
+
+    if (GetAbilitySystemComponent() &&
+        GetAbilitySystemComponent()->HasMatchingGameplayTag(
+            FGameplayTag::RequestGameplayTag(FName("State.Attacking"))))
+    {
+        return;
+    }
+
+    FVector DashDirection = GetLastMovementInputVector();
+    DashDirection.Z = 0.f;
+
+    if (DashDirection.IsNearlyZero())
+    {
+        DashDirection = GetActorForwardVector();
+        DashDirection.Z = 0.f;
+    }
+
+    DashDirection.Normalize();
+    MovementComponent->Velocity = FVector(
+        DashDirection.X * DashSpeed,
+        DashDirection.Y * DashSpeed,
+        MovementComponent->Velocity.Z);
 }
 
 void APlayerCharacter::Interact()
 {
+    const FVector TraceStart = FollowCamera ? FollowCamera->GetComponentLocation() : GetActorLocation();
+    const FVector TraceEnd = TraceStart + (FollowCamera ? FollowCamera->GetForwardVector() : GetActorForwardVector()) * InteractionDistance;
+    FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(PlayerInteraction), false, this);
+    FHitResult Hit;
+
+    if (GetWorld()->SweepSingleByChannel(
+        Hit, TraceStart, TraceEnd, FQuat::Identity, ECC_Visibility,
+        FCollisionShape::MakeSphere(35.f), QueryParams))
+    {
+        AActor* HitActor = Hit.GetActor();
+        if (IsValid(HitActor) && HitActor->Implements<UInteractableInterface>() &&
+            IInteractableInterface::Execute_CanInteract(HitActor, this))
+        {
+            IInteractableInterface::Execute_Interact(HitActor, this);
+            return;
+        }
+    }
+
     UInventoryComponent* Inventory = FindComponentByClass<UInventoryComponent>();
     if (!Inventory) return;
     
@@ -262,7 +329,7 @@ void APlayerCharacter::Interact()
                 continue;
             }
 
-            // 装入背包
+            // Add the pickup to inventory before destroying it.
             if (Inventory->AddItem(Pickup->ItemID, 1))
             {
                 Pickup->Destroy();
@@ -296,7 +363,7 @@ void APlayerCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
 }
 
 // ========================================================
-// 🔴 角色属性面板 
+// Character panel.
 // ========================================================
 void APlayerCharacter::ToggleOpenPanelAction()
 {
@@ -331,7 +398,7 @@ void APlayerCharacter::ToggleOpenPanelAction()
 }
 
 // ========================================================
-// 🔴 背包面板 
+// Inventory panel.
 // ========================================================
 void APlayerCharacter::ToggleInventoryPanelAction()
 {
@@ -355,7 +422,7 @@ void APlayerCharacter::ToggleInventoryPanelAction()
    
         if (InventoryPanelInstance)
         {
-            // 核心注射环节：拿到玩家身上的背包，喂给 UI！
+            // Inject the character's inventory component into the panel.
             UInventoryComponent* InventoryComp = FindComponentByClass<UInventoryComponent>();
             if (InventoryComp)
             {
@@ -373,7 +440,7 @@ void APlayerCharacter::ToggleInventoryPanelAction()
     }
 }
 
-// --- 锁定系统 ---
+// Lock-on targeting.
 
 AActor* APlayerCharacter::FindBestTarget()
 {

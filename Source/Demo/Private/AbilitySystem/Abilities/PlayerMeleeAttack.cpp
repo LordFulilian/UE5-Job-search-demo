@@ -1,5 +1,6 @@
 ﻿#include "AbilitySystem/Abilities/PlayerMeleeAttack.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -8,40 +9,65 @@
 #include "DrawDebugHelpers.h" 
 #include "PlayerGameplayTags.h"
 
-
 UPlayerMeleeAttack::UPlayerMeleeAttack()
 {
-    // 实例化策略：播放动画的技能必须是 "InstancedPerActor" (每个角色实例化一个)
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
 void UPlayerMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-    // 必须调用父类
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    // 如果忘了在蓝图里配置动画，直接结束技能，防止卡死
     if (!AttackMontage)
     {
        EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
        return;
     }
 
-    // --- 1. 启动监听动画事件的任务 ---
-    // OnlyMatchExact: true 表示必须完全匹配我们设置的 Tag
-    UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, HitEventTag, nullptr, false, true);
-    if (WaitEventTask)
+    // Validate combo configuration before creating ability tasks.
+    if (MaxComboCount > 1 && !ComboEventTag.IsValid())
     {
-       // 当监听到事件时，触发 OnHitEventReceived 函数
-       WaitEventTask->EventReceived.AddDynamic(this, &UPlayerMeleeAttack::OnHitEventReceived);
-       WaitEventTask->ReadyForActivation();
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("⚠️ 提示: 设定为多段攻击，但未配置 ComboEventTag"));
     }
 
-    // --- 2. 启动播放蒙太奇的任务 ---
+    ComboCount = 1;
+    bSaveAttack = false;
+    // Reinitialize combo state for this activation.
+    if (MaxComboCount > 1 && !ComboEventTag.IsValid())
+    {
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("⚠️ 提示: 设定为多段攻击，但未配置 ComboEventTag"));
+    }
+
+    ComboCount = 1;
+    bSaveAttack = false;
+
+    // Listen for the montage hit event.
+    if (HitEventTag.IsValid())
+    {
+        UAbilityTask_WaitGameplayEvent* WaitHitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, HitEventTag, nullptr, false, true);
+        if (WaitHitEventTask)
+        {
+           WaitHitEventTask->EventReceived.AddDynamic(this, &UPlayerMeleeAttack::OnHitEventReceived);
+           WaitHitEventTask->ReadyForActivation();
+        }
+    }
+
+    // Listen for montage combo-window events.
+    if (ComboEventTag.IsValid())
+    {
+        // Accept child tags as combo-window events.
+        UAbilityTask_WaitGameplayEvent* WaitComboEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, ComboEventTag, nullptr, false, false);
+        if (WaitComboEventTask)
+        {
+           WaitComboEventTask->EventReceived.AddDynamic(this, &UPlayerMeleeAttack::OnComboEventReceived);
+           WaitComboEventTask->ReadyForActivation();
+        }
+    }
+
+    // Play the attack montage and end the ability on every terminal outcome.
     UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackMontage);
     if (MontageTask)
     {
-       // 使用 C++ 动态委托，监听动画的状态
        MontageTask->OnBlendOut.AddDynamic(this, &UPlayerMeleeAttack::OnMontageCompleted);
        MontageTask->OnCompleted.AddDynamic(this, &UPlayerMeleeAttack::OnMontageCompleted);
        MontageTask->OnInterrupted.AddDynamic(this, &UPlayerMeleeAttack::OnMontageCompleted);
@@ -50,10 +76,62 @@ void UPlayerMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
        MontageTask->ReadyForActivation();
     }
 
+    // Start from the first combo section when it exists.
+    if (UAnimInstance* AnimInstance = CurrentActorInfo->GetAnimInstance())
+    {
+        FName FirstSection("Attack1");
+        if (AttackMontage->IsValidSectionName(FirstSection))
+        {
+            AnimInstance->Montage_JumpToSection(FirstSection, AttackMontage);
+        }
+    }
+
+    // Fall back to a timed trace if no montage event arrives.
     if (HitTraceDelay > 0.f && GetWorld())
     {
         bTraceAlreadyFired = false;
         GetWorld()->GetTimerManager().SetTimer(HitTraceTimerHandle, this, &UPlayerMeleeAttack::OnHitTraceTimerFired, HitTraceDelay, false);
+    }
+}
+
+// Buffer native input received while the ability is active.
+void UPlayerMeleeAttack::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+{
+    Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+
+    // Save one input for the next available combo window.
+    if (ComboCount < MaxComboCount)
+    {
+        bSaveAttack = true;
+       
+    }
+}
+
+void UPlayerMeleeAttack::OnComboEventReceived(FGameplayEventData Payload)
+{
+
+
+    // Advance only when input was buffered before the combo event.
+    if (bSaveAttack)
+    {
+        bSaveAttack = false; // Consume buffered input.
+        ComboCount++;        // Advance to the next attack.
+
+        // Allow the next combo section to deal damage.
+        bTraceAlreadyFired = false; 
+
+        // Montage sections follow the Attack2, Attack3 naming convention.
+        FName NextSection = FName(*FString::Printf(TEXT("Attack%d"), ComboCount));
+        
+       
+        if (UAnimInstance* AnimInstance = CurrentActorInfo->GetAnimInstance())
+        {
+            AnimInstance->Montage_JumpToSection(NextSection, AttackMontage);
+        }
+    }
+    else
+    {
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, TEXT("⏳ 没按键，连招结束，自然收招。"));
     }
 }
 
@@ -64,25 +142,22 @@ void UPlayerMeleeAttack::OnMontageCompleted()
         GetWorld()->GetTimerManager().ClearTimer(HitTraceTimerHandle);
     }
     bTraceAlreadyFired = false;
-    // 动画播放完毕，调用底层函数正式结束当前技能。
-    // 这样 GAS 系统才会知道你砍完了，允许你进行下一次攻击或释放别的技能。
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UPlayerMeleeAttack::OnHitTraceTimerFired()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] Timer fallback fired - executing trace"));
     PerformMeleeTraceAndApplyDamage();
 }
 
 void UPlayerMeleeAttack::OnHitEventReceived(FGameplayEventData Payload)
 {
+    
+
     if (GetWorld() && HitTraceTimerHandle.IsValid())
     {
         GetWorld()->GetTimerManager().ClearTimer(HitTraceTimerHandle);
     }
-    UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] OnHitEventReceived fired! Tag=%s"), *HitEventTag.ToString());
-    // 动画播到了受击帧！立刻执行射线和伤害检测！
     PerformMeleeTraceAndApplyDamage();
 }
 
@@ -91,95 +166,46 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
     AActor* AvatarActor = GetAvatarActorFromActorInfo();
     if (!AvatarActor) return;
 
-    if (bTraceAlreadyFired)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] Trace already fired this activation - skipping"));
-        return;
-    }
+    if (bTraceAlreadyFired) return;
     bTraceAlreadyFired = true;
-
-    UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] PerformMeleeTraceAndApplyDamage called by %s"), *AvatarActor->GetName());
 
     UWorld* World = GetWorld();
     if (!World) return;
 
-    // 1. 计算射线起点与终点
     FVector StartLocation = AvatarActor->GetActorLocation();
     FVector ForwardVector = AvatarActor->GetActorForwardVector();
     FVector EndLocation = StartLocation + (ForwardVector * TraceDistance);
 
-    // 2. 设置碰撞形状和查询参数
     FCollisionShape SphereShape = FCollisionShape::MakeSphere(TraceRadius);
     FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(AvatarActor); // 忽略自身
+    QueryParams.AddIgnoredActor(AvatarActor); 
 
     FHitResult HitResult;
+    bool bHit = World->SweepSingleByChannel(HitResult, StartLocation, EndLocation, FQuat::Identity, ECollisionChannel::ECC_Pawn, SphereShape, QueryParams);
 
-    // 3. 执行物理射线检测 (对应蓝图的 Sphere Trace By Channel)
-    bool bHit = World->SweepSingleByChannel(
-       HitResult, 
-       StartLocation, 
-       EndLocation, 
-       FQuat::Identity, 
-       ECollisionChannel::ECC_Pawn, 
-       SphereShape, 
-       QueryParams
-    );
-
-    // 绘制 Debug 线，方便在编辑器里调试 (打包发布时会自动剔除)
 #if WITH_EDITOR
     DrawDebugSphere(World, StartLocation, TraceRadius, 12, FColor::Green, false, 2.f);
-    if (bHit)
-    {
-       DrawDebugSphere(World, HitResult.ImpactPoint, TraceRadius, 12, FColor::Red, false, 2.f);
-    }
+    if (bHit) DrawDebugSphere(World, HitResult.ImpactPoint, TraceRadius, 12, FColor::Red, false, 2.f);
 #endif
 
-    // 4. 处理命中逻辑
-    // 4. 处理命中逻辑
     if (bHit && HitResult.GetActor())
     {
        AActor* TargetActor = HitResult.GetActor();
        UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
        UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 
-       // 诊断 1：检查有没有 ASC 组件
-       if (!TargetASC)
-       {
-           if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("❌ 失败：你打中的东西身上没有 ASC 组件！"));
-           return;
-       }
+       if (!TargetASC || !DamageEffectClass) return;
 
-       // 诊断 2：检查蓝图里有没有配置 GE
-       if (!DamageEffectClass)
-       {
-           if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("❌ 失败：代码里 DamageEffectClass 为空！请去蓝图重新配置 GE_MeleeDamage！"));
-           return;
-       }
-
-       // 记录砍之前的血量
-       UE_LOG(LogTemp, Warning, TEXT("[MeleeAttack] Hit %s!"), *TargetActor->GetName());
-
-       bool bFoundHealth = false;
-       float OldHealth = TargetASC->GetGameplayAttributeValue(UPlayerAttributeSet::GetHealthAttribute(), bFoundHealth);
-
-       // 构建并应用伤害
        FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
        EffectContext.AddHitResult(HitResult);
        FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContext);
 
-    	// 🟢 在这里注入 SetByCaller 的动态伤害值！
-    	if (SpecHandle.IsValid())
-    	{
-    		// 1. 拿到你的 GameplayTags 单例 (确保名字和你的项目一致)
-    		FPlayerGameplayTags GameplayTags = FPlayerGameplayTags::Get(); 
-           
-    	const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
-    		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage_Physical, ScaledDamage);
-
-    		// 3. 🔴 核心：带着塞好数字的句柄，狠狠地打在敌人身上！(这一步必须放在最后)
-    		FActiveGameplayEffectHandle ActiveHandle = SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
-    	}
-       }
+        if (SpecHandle.IsValid())
+        {
+           FPlayerGameplayTags GameplayTags = FPlayerGameplayTags::Get(); 
+           const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
+           UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage_Physical, ScaledDamage);
+           SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+        }
     }
-    
+}

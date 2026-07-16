@@ -7,20 +7,20 @@
 
 void UOverlayWidgetController::BroadcastInitialValues()
 {
-    // 让父类把基础数据发出去
+    // Broadcast values owned by the base controller first.
     Super::BroadcastInitialValues();
 
-    // 广播初始血量数据
+    // Broadcast initial health values.
     const UPlayerAttributeSet* PlayerAttributeSet = CastChecked<UPlayerAttributeSet>(AttributeSet);
     OnHealthChanged.Broadcast(PlayerAttributeSet->GetHealth());
     OnMaxHealthChanged.Broadcast(PlayerAttributeSet->GetMaxHealth());
 
-    // 🔴 广播初始经验值和等级 (可选：如果你希望 UI 刚加载就显示正确的经验条)
+    // The experience component can also provide initial XP values.
     if (AOPlayerState* OPlayerState = Cast<AOPlayerState>(PlayerState))
     {
         if (OPlayerState->ExpComponent)
         {
-            // 提示：如果你 ExpComponent 里有对应的 Get 函数，可以解开这里的注释
+            // Enable this once the component exposes the required getters.
             // OnXPChangedDelegate.Broadcast(OPlayerState->ExpComponent->GetCurrentXP(), OPlayerState->ExpComponent->GetXPToNext());
         }
     }
@@ -28,26 +28,26 @@ void UOverlayWidgetController::BroadcastInitialValues()
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
-    // 养成好习惯：绑定回调时也先喊一声父类
+    // Bind dependencies owned by the base controller first.
     Super::BindCallbacksToDependencies();
 
     const UPlayerAttributeSet* PlayerAttributeSet = CastChecked<UPlayerAttributeSet>(AttributeSet);
     
-    // 1. 绑定血量变化
+    // Forward health changes to the overlay.
     AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetHealthAttribute()).AddLambda(
     [this](const FOnAttributeChangeData& Data)
     {
        OnHealthChanged.Broadcast(Data.NewValue);  
     });
     
-    // 2. 绑定最大血量变化
+    // Forward maximum-health changes to the overlay.
     AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetMaxHealthAttribute()).AddLambda(
     [this](const FOnAttributeChangeData& Data)
     {
         OnMaxHealthChanged.Broadcast(Data.NewValue);  
     });
     
-    // 3. 绑定 Tag 消息弹窗
+    // Convert gameplay-effect asset tags into UI messages.
     Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
     [this](const FGameplayTagContainer& AssetTag)
     {
@@ -62,12 +62,12 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
        }
     });
 
-    // 🔴 4. 绑定经验组件的事件！
+    // Forward experience-component events.
     if (AOPlayerState* OPlayerState = Cast<AOPlayerState>(PlayerState))
     {
         if (OPlayerState->ExpComponent)
         {
-            // 将后端的 ExpComponent 信号，绑定到我们的 Callback 函数上
+            // Adapt component delegates to widget-controller delegates.
             OPlayerState->ExpComponent->OnExperienceChanged.AddDynamic(this, &UOverlayWidgetController::XPChangedCallback);
             OPlayerState->ExpComponent->OnLeveledUp.AddDynamic(this, &UOverlayWidgetController::LevelUpCallback);
         }

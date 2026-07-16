@@ -5,7 +5,7 @@
 
 UInventoryComponent::UInventoryComponent()
 {
-    // 背包组件是纯数据容器，不需要每帧刷新，关掉 Tick 节省性能
+    // Inventory is event-driven and does not require ticking.
     PrimaryComponentTick.bCanEverTick = false; 
 }
 
@@ -13,7 +13,7 @@ void UInventoryComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    // 游戏开始时，按照容量初始化格子数组
+    // Initialize the fixed-capacity slot array.
     InventorySlots.SetNum(InventoryCapacity);
 }
 
@@ -21,7 +21,7 @@ bool UInventoryComponent::GetItemStaticData(FName ItemID, FItemStaticData& OutIt
 {
     if (ItemDataTable)
     {
-        // 核心：基于 ID 去读取数据表对应行
+        // Resolve static item data by row identifier.
         FItemStaticData* Data = ItemDataTable->FindRow<FItemStaticData>(ItemID, TEXT("Inventory Lookup"));
         if (Data)
         {
@@ -45,48 +45,48 @@ bool UInventoryComponent::AddItem(FName ItemID, int32 Amount)
 
     int32 FirstEmptyIndex = -1;
 
-    // 遍历背包格子
+    // Search existing slots before allocating a new stack.
     for (int32 i = 0; i < InventorySlots.Num(); ++i)
     {
-        // 1. 尝试堆叠 (同一种物品且没达到最大堆叠数)
+        // Fill compatible stacks up to their configured limit.
         if (InventorySlots[i].ItemID == ItemID && InventorySlots[i].Quantity < ItemData.MaxStackSize)
         {
             int32 SpaceLeft = ItemData.MaxStackSize - InventorySlots[i].Quantity;
             if (SpaceLeft >= Amount)
             {
                 InventorySlots[i].Quantity += Amount;
-                OnInventoryUpdated.Broadcast(); // 数据变了，大喇叭广播
+                OnInventoryUpdated.Broadcast(); // Notify UI listeners.
                 return true; 
             }
             else
             {
-                // 如果这个格子装不完，把这个格子装满，剩下的数量继续往后找
+                // Continue searching when this stack cannot hold the remainder.
                 InventorySlots[i].Quantity += SpaceLeft;
                 Amount -= SpaceLeft;
             }
         }
-        // 2. 顺便记录一下遇到的第一个空格子，留作备用
+        // Remember the first empty slot for any remaining items.
         else if (InventorySlots[i].IsEmpty() && FirstEmptyIndex == -1)
         {
             FirstEmptyIndex = i;
         }
     }
 
-    // 3. 如果之前的堆叠没装完（或者根本没法堆叠），且找到了空格子，放进新格子
+    // Place the remaining quantity in the first empty slot.
     if (Amount > 0 && FirstEmptyIndex != -1)
     {
         InventorySlots[FirstEmptyIndex].ItemID = ItemID;
         InventorySlots[FirstEmptyIndex].Quantity = Amount;
-        OnInventoryUpdated.Broadcast(); // 数据变了，大喇叭广播
+        OnInventoryUpdated.Broadcast(); // Notify UI listeners.
         return true;
     }
 
-    return false; // 背包满了，添加失败
+    return false; // Inventory is full.
 }
 
 bool UInventoryComponent::UseItemAtIndex(int32 SlotIndex)
 {
-    // 防御性编程：检查越界和空格子
+    // Reject invalid or empty slots.
     if (!InventorySlots.IsValidIndex(SlotIndex) || InventorySlots[SlotIndex].IsEmpty()) return false;
 
     FName ItemToUse = InventorySlots[SlotIndex].ItemID;
@@ -95,7 +95,7 @@ bool UInventoryComponent::UseItemAtIndex(int32 SlotIndex)
     if (GetItemStaticData(ItemToUse, ItemData))
     {
         // ==========================================
-        // 🔴 GAS 终极联动：吃掉物品，赋予属性！
+        // Apply the consumable's configured gameplay effect.
         // ==========================================
         if (ItemData.UsedGameplayEffect)
         {
@@ -104,7 +104,7 @@ bool UInventoryComponent::UseItemAtIndex(int32 SlotIndex)
             
             if (ASC)
             {
-                // 像你写近战伤害那样，构造 Context 并应用 GE 给自己 (回血/加攻击等)
+                // Build an effect context and apply the effect to the owner.
                 FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
                 ContextHandle.AddInstigator(Owner, Owner);
                 
@@ -117,18 +117,18 @@ bool UInventoryComponent::UseItemAtIndex(int32 SlotIndex)
         }
 
         // ==========================================
-        // 扣除物品数量
+        // Consume one item.
         // ==========================================
         InventorySlots[SlotIndex].Quantity -= 1;
         
-        // 如果用光了，把格子清空归位
+        // Reset the slot after the stack is exhausted.
         if (InventorySlots[SlotIndex].Quantity <= 0)
         {
             InventorySlots[SlotIndex].ItemID = NAME_None;
             InventorySlots[SlotIndex].Quantity = 0;
         }
 
-        // 通知 UI 更新显示数量
+        // Refresh inventory UI.
         OnInventoryUpdated.Broadcast();
         return true;
     }

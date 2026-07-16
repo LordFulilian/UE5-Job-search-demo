@@ -5,11 +5,11 @@
 #include "Character/PlayerCharacter.h" 
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
-#include "Components/Button.h" // 🔴 新增按钮头文件
+#include "Components/Button.h"
 #include "Components/ItemTypes.h"
 
 
-// 🔴 新增：在这里绑定按钮点击事件
+// Bind category tabs when the widget is constructed.
 void UInventoryPanelWidget::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -24,35 +24,35 @@ void UInventoryPanelWidget::InitializePanel(UInventoryComponent* InInventoryComp
     if (!InInventoryComp) return;
     InventoryReference = InInventoryComp;
     
-    // 打开面板时，默认展示“材料”分类
+    // Show materials when the panel first opens.
     RefreshInventoryByFilter(EItemType::Material); 
 }
 
-// 按钮点击回调：传递不同的过滤参数
+// Category button callbacks select the active filter.
 void UInventoryPanelWidget::OnMaterialTabClicked() { RefreshInventoryByFilter(EItemType::Material); }
 void UInventoryPanelWidget::OnWeaponTabClicked()   { RefreshInventoryByFilter(EItemType::Weapon); }
 void UInventoryPanelWidget::OnQuestTabClicked()    { RefreshInventoryByFilter(EItemType::Quest); }
 
 // ==========================================
-// 🔴 核心升级：带有过滤功能的网格刷新逻辑
+// Rebuild the grid using the selected category.
 // ==========================================
 void UInventoryPanelWidget::RefreshInventoryByFilter(EItemType FilterType)
 {
     if (!InventoryReference || !Grid_Slots || !SlotWidgetClass) return;
 
-    // 1. 清空当前网格
+    // Clear existing slot widgets.
     Grid_Slots->ClearChildren();
 
-    // 2. 遍历背包数据
+    // Iterate over runtime inventory slots.
     for (const auto& SlotData : InventoryReference->InventorySlots)
     {
-       // 如果是空格子，跳过不渲染
+       // Empty slots are not rendered.
        if (SlotData.ItemID == NAME_None || SlotData.Quantity <= 0) continue;
 
        FItemStaticData ItemData;
        if (InventoryReference->GetItemStaticData(SlotData.ItemID, ItemData))
        {
-           // 🔴 3. 最关键的一步：只有物品类型匹配当前页签，才允许生成格子！
+           // Create widgets only for items in the selected category.
            if (ItemData.ItemType == FilterType)
            {
                UInventorySlotWidget* NewSlotWidget = CreateWidget<UInventorySlotWidget>(GetWorld(), SlotWidgetClass);
@@ -61,7 +61,7 @@ void UInventoryPanelWidget::RefreshInventoryByFilter(EItemType FilterType)
                    NewSlotWidget->InitializeSlot(SlotData.ItemID, SlotData.Quantity, ItemData.ItemIcon);
                    Grid_Slots->AddChildToWrapBox(NewSlotWidget);
 
-                   // 依然保留格子点击事件的绑定
+                   // Preserve slot-click event forwarding.
                    NewSlotWidget->OnSlotClicked.AddDynamic(this, &UInventoryPanelWidget::UpdateDetailPanel);
                }
            }
@@ -69,10 +69,10 @@ void UInventoryPanelWidget::RefreshInventoryByFilter(EItemType FilterType)
     }
 }
 
-// (原来的 RefreshInventoryUI 可以保留以防其他地方调用，但逻辑也可以指向 Filter)
+// Default refresh retained for existing callers.
 void UInventoryPanelWidget::RefreshInventoryUI()
 {
-    // 如果没有指定，默认刷新材料
+    // Use the material category as the default view.
     RefreshInventoryByFilter(EItemType::Material);
 }
 

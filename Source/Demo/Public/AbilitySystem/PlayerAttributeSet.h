@@ -45,7 +45,7 @@ struct FEffectProperties
 };
 
 /**
- * 玩家属性集 
+ * Replicated player attributes used by GAS and UI.
  */
 UCLASS()
 class DEMO_API UPlayerAttributeSet : public UAttributeSet
@@ -56,7 +56,7 @@ public:
     UPlayerAttributeSet();
 
     // ==========================================================
-    // 核心字典：用于 UI 蓝图通过 GameplayTag 自动抓取对应的属性
+    // Maps gameplay tags to attributes for data-driven UI lookup.
     // ==========================================================
     template<class T>
     using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
@@ -71,16 +71,16 @@ public:
     
     /*
      * ==========================================================
-     * 核心生存属性 (Vital Attributes)
+     * Vital attributes
      * ==========================================================
      */
 
-    // 1. 当前生命值
+    // Current health.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Vital Attributes")
     FGameplayAttributeData Health;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, Health);
 
-    // 2. 最大生命值 
+    // Maximum health.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Vital Attributes")
     FGameplayAttributeData MaxHealth;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, MaxHealth);
@@ -101,48 +101,48 @@ public:
     
     /*
      * ==========================================================
-     * 一级属性：基础面板 (Primary Attributes)
+     * Primary attributes
      * ==========================================================
      */
     
-    // 3. 攻击力 (Attack) - 白值基础攻击
+    // Base attack value.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Attack, Category = "Primary Attributes")
     FGameplayAttributeData Attack;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, Attack);
 
-    // 4. 防御力 (Defense)
+    // Base defense value.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Defense, Category = "Primary Attributes")
     FGameplayAttributeData Defense;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, Defense);
 
     /*
      * ==========================================================
-     * 二级属性：进阶战斗面板 (Secondary Attributes)
+     * Secondary attributes
      * ==========================================================
      */
 
-    // 5. 暴击率 (Crit Rate) - 通常以百分比表示，比如 0.05 代表 5%
+    // Critical-hit probability in the [0, 1] range.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CritRate, Category = "Secondary Attributes")
     FGameplayAttributeData CritRate;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, CritRate);
 
-    // 6. 暴击伤害 (Crit Damage) - 通常初始值为 1.5 代表 150% 爆伤
+    // Additional critical-hit damage expressed as a percentage.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CritDamage, Category = "Secondary Attributes")
     FGameplayAttributeData CritDamage;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, CritDamage);
 
-    // 7. 共鸣效率/充能效率 (Energy Regen) - 默认 1.0 代表 100% 充能获取
+    // Energy regeneration multiplier.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_EnergyRegen, Category = "Secondary Attributes")
     FGameplayAttributeData EnergyRegen;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, EnergyRegen);
 
     /*
      * ==========================================================
-     * 三级属性：独立乘区与增伤 (Damage Bonus Attributes)
+     * Damage-bonus attributes
      * ==========================================================
      */
 
-    // 8. 技能伤害加成 (Skill Damage Bonus) - 例如 E 技能伤害提升 15% (0.15)
+    // Skill damage bonus in the [0, 1] range.
     UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_SkillDamageBonus, Category = "DamageBonus Attributes")
     FGameplayAttributeData SkillDamageBonus;
     ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, SkillDamageBonus);
@@ -156,7 +156,7 @@ public:
     
     /*
      * ==========================================================
-     * 网络同步回调函数 (Replication Notifies)
+     * Replication notifications
      * ==========================================================
      */
     UFUNCTION()
@@ -194,7 +194,7 @@ public:
     
 
 private:
-    // 效果属性辅助结构提取函数
+    // Extracts source and target actors from an effect callback.
     void SetEffectProperties(const struct FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
     
     void ShowFloatingText(const FEffectProperties & Props , float Damage,bool bCriticalHit)const;

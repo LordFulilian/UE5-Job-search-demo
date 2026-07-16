@@ -12,26 +12,26 @@
 
 UPlayerAttributeSet::UPlayerAttributeSet()
 {
-    // 获取全局 Tag 单例
+    // Cache native gameplay tags for attribute lookup.
     const FPlayerGameplayTags& GameplayTags = FPlayerGameplayTags::Get();
 
-    // 绑定核心生存属性
+    // Vital attributes.
     TagsToAttributes.Add(GameplayTags.Attributes_Vital_Health, GetHealthAttribute);
     TagsToAttributes.Add(GameplayTags.Attributes_Vital_MaxHealth, GetMaxHealthAttribute);
 
-    // 绑定一级面板属性
+    // Primary attributes.
     TagsToAttributes.Add(GameplayTags.Attributes_Primary_Attack, GetAttackAttribute);
     TagsToAttributes.Add(GameplayTags.Attributes_Primary_Defense, GetDefenseAttribute);
 
-    // 绑定二级进阶属性
+    // Secondary attributes.
     TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritRate, GetCritRateAttribute);
     TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritDamage, GetCritDamageAttribute);
     TagsToAttributes.Add(GameplayTags.Attributes_Secondary_EnergyRegen, GetEnergyRegenAttribute);
 
-    // 绑定三级增伤属性
+    // Damage-bonus attributes.
     TagsToAttributes.Add(GameplayTags.Attributes_DamageBonus_SkillDamageBonus, GetSkillDamageBonusAttribute);
 
-    // 绑定抗性属性
+    // Resistance attributes.
     TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Fire, GetFireResistanceAttribute);
     TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Ice, GetIceResistanceAttribute);
     TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Physical, GetPhysicalResistanceAttribute);
@@ -41,23 +41,23 @@ void UPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     
-    // 核心生存属性
+    // Vital attributes.
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Health, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
     
-    // 一级面板属性
+    // Primary attributes.
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Attack, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Defense, COND_None, REPNOTIFY_Always);
     
-    // 二级进阶属性
+    // Secondary attributes.
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, CritRate, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, CritDamage, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, EnergyRegen, COND_None, REPNOTIFY_Always);
     
-    // 三级增伤属性
+    // Damage-bonus attributes.
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, SkillDamageBonus, COND_None, REPNOTIFY_Always);
     
-    // 抗性 
+    // Resistance attributes.
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, FireResistance, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, IceResistance, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, PhysicalResistance, COND_None, REPNOTIFY_Always);
@@ -67,7 +67,7 @@ void UPlayerAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attri
 {
     Super::PreAttributeBaseChange(Attribute, NewValue);
     
-    // 在数值修改前拦截，防止血量溢出上限或变成负数
+    // Clamp health before base-value changes are committed.
     if (Attribute == GetHealthAttribute())
     {
        NewValue = FMath::Clamp(NewValue, 0.f, GetMaxHealth()); 
@@ -170,13 +170,13 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
 
    if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
    {
-      // 1. 把暂存篮子里的伤害值拿出来
+       // Consume accumulated meta damage.
       const float LocalIncomingDamage = GetIncomingDamage();
         
-      // 2. 立刻清空篮子
+       // Clear the meta attribute before applying health changes.
       SetIncomingDamage(0.f);
 
-      // 3. 执行扣血逻辑
+       // Apply damage to health.
       if (LocalIncomingDamage > 0.f)
       {
          const float NewHealth = GetHealth() - LocalIncomingDamage;
@@ -214,16 +214,16 @@ void UPlayerAttributeSet::ShowFloatingText(const FEffectProperties& Props, float
 {
 	if (Props.SourceCharacter != Props.TargetCharacter)
 	{
-		// 1. 尝试拿攻击方的控制器（玩家打怪时生效）
+		// Prefer the source controller when the player deals damage.
 		AOnePlayerController* PC = Cast<AOnePlayerController>(Props.SourceController);
         
-		// 2. 如果拿不到（说明是怪物打玩家），那就拿挨打方的控制器
+		// Fall back to the target controller when an enemy deals damage.
 		if (!PC)
 		{
 			PC = Cast<AOnePlayerController>(Props.TargetController);
 		}
         
-		// 3. 弹伤害数字
+		// Display the resulting damage number.
 		if (PC)
 		{
 			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bCriticalHit);

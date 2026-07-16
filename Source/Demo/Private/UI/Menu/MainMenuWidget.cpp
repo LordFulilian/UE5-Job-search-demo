@@ -25,10 +25,10 @@ void UMainMenuWidget::OnEnterGameClicked()
 	{
 		if (!GameplayLevel.IsNull())
 		{
-			// 点击后按钮失效，防止玩家疯狂连点崩溃
+			// Disable the button to prevent duplicate level-load requests.
 			if (Btn_EnterGame) Btn_EnterGame->SetIsEnabled(false);
 
-			// 🔴 使用官方提供的高级 API 切换关卡
+			// Load the configured gameplay level through the engine API.
 			UGameplayStatics::OpenLevelBySoftObjectPtr(this, GameplayLevel);
 		}
 		else

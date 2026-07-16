@@ -4,13 +4,13 @@
 #include "Blueprint/UserWidget.h"
 #include "InventorySlotWidget.generated.h"
 
-// 前向声明 UI 组件
+// Forward declarations for bound UI controls.
 class UImage;
 class UTextBlock;
 class UButton;
 
 // =========================================================================
-// 🔴 1. 声明大喇叭类型：带 1 个 FName 参数，用来把被点击的物品 ID 喊出去
+// Reports the item identifier for a clicked slot.
 // =========================================================================
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotClickedSignature, FName, ItemID);
 
@@ -20,17 +20,17 @@ class DEMO_API UInventorySlotWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	// 供外部面板调用的“数据注射”接口
+	// Populates the slot with item data.
 	void InitializeSlot(FName InItemID, int32 InAmount, UTexture2D* InIcon);
 
 	// =========================================================================
-	// 🔴 2. 实例化这个大喇叭，名字必须叫 OnSlotClicked！主面板就是听它的！
+	// Broadcast when the slot button is clicked.
 	// =========================================================================
 	UPROPERTY(BlueprintAssignable, Category = "Inventory|Events")
 	FOnSlotClickedSignature OnSlotClicked;
 
 protected:
-	// UI 初始化生命周期函数
+	// Binds the slot button.
 	virtual void NativeConstruct() override;
 
 	UPROPERTY(meta = (BindWidget))
@@ -43,13 +43,13 @@ protected:
 	TObjectPtr<UButton> Btn_Slot;
 
 	// =========================================================================
-	// 🔴 3. 核心通信变量与函数
+	// Current slot state.
 	// =========================================================================
-	// 用来记住当前格子里装的是什么物品
+	// Item represented by this slot.
 	UPROPERTY()
 	FName CurrentItemID;
 
-	// 按钮被按下时的响应函数
+	// Handles button clicks and broadcasts the item identifier.
 	UFUNCTION()
 	void OnButtonClicked();
 };

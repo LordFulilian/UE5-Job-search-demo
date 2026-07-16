@@ -7,9 +7,9 @@
 
 AMainMenuGameMode::AMainMenuGameMode()
 {
-	// 指定我们刚写的纯 UI 控制器
+	// Use the menu-only player controller.
 	PlayerControllerClass = AMainMenuPlayerController::StaticClass();
     
-	// 主菜单不需要生成实体角色
+	// The main menu does not spawn a playable pawn.
 	DefaultPawnClass = nullptr; 
 }

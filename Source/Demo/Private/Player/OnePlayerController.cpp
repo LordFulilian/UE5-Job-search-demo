@@ -2,111 +2,167 @@
 
 #include "Player/OnePlayerController.h"
 
-
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
-#include "UI/Widget/DamageTextComponent.h"	
-
+#include "UI/Widget/DamageTextComponent.h"
+#include "Character/PlayerCharacter.h"
+#include "Dialogue/DialogueDataAsset.h"
+#include "interaction/InteractableInterface.h"
+#include "UI/Widget/PlayerUserWidget.h"
+#include "Character/BossCharacter.h"
+#include "UI/Dialogue/DialogueWidget.h"
 
 AOnePlayerController::AOnePlayerController()
 {
-	bReplicates = true;
+    bReplicates = true;
+    DialogueWidgetClass = UDialogueWidget::StaticClass();
+}
+void AOnePlayerController::ShowBossHealthBar(ABossCharacter* Boss)
+{
+    if (!IsLocalController() || !Boss || !BossHealthBarClass) return;
+
+    if (!BossHealthBarInstance)
+    {
+        BossHealthBarInstance =
+            CreateWidget<UPlayerUserWidget>(this, BossHealthBarClass);
+    }
+
+    if (BossHealthBarInstance)
+    {
+        BossHealthBarInstance->SetWidgetController(Boss);
+        BossHealthBarInstance->AddToViewport(50);
+    }
 }
 
+void AOnePlayerController::HideBossHealthBar()
+{
+    if (BossHealthBarInstance)
+    {
+        BossHealthBarInstance->RemoveFromParent();
+    }
+}
 void AOnePlayerController::ToggleMouseCursor()
 {
-	// 1. 直接使用父类的 bShowMouseCursor 取反
-	// 如果当前是 true，就变成 false；如果是 false，就变成 true
-	bShowMouseCursor = !bShowMouseCursor;
+    bShowMouseCursor = !bShowMouseCursor;
 
-	// 2. 根据状态应用不同的输入模式
-	if (bShowMouseCursor)
-	{
-		// === 鼠标显示模式 (Alt 呼出) ===
-		FInputModeGameAndUI InputMode;
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		// 【可选优化】这行代码能让鼠标点击瞬间不隐藏，防止闪烁，但不是必须的
-		InputMode.SetHideCursorDuringCapture(false);
-		SetInputMode(InputMode);
-	}
-	else
-	{
-		// === 游戏模式 (鼠标消失) ===
-		FInputModeGameOnly InputMode;
-		SetInputMode(InputMode);
-	}
+    // Switch input routing with cursor visibility.
+    if (bShowMouseCursor)
+    {
+        FInputModeGameAndUI InputMode;
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        InputMode.SetHideCursorDuringCapture(false);
+        SetInputMode(InputMode);
+    }
+    else
+    {
+        FInputModeGameOnly InputMode;
+        SetInputMode(InputMode);
+    }
 }
 
-// 【新增】点击屏幕时的逻辑
 void AOnePlayerController::OnClickScreen()
 {
-	// 只有当鼠标当前是【显示】的时候，点击屏幕才需要把它【隐藏】
-	// 如果鼠标本来就是隐藏的（你在正常玩游戏开枪），不要执行这个，否则会干扰正常操作
-	if (bShowMouseCursor)
-	{
-		ToggleMouseCursor(); // 调用切换函数，把它关掉
-	}
+    // Clicking the viewport returns focus to the game only when the cursor is visible.
+    if (bShowMouseCursor)
+    {
+        ToggleMouseCursor();
+    }
 }
 
 void AOnePlayerController::SetupInputComponent()
 {
-	Super::SetupInputComponent();
+    Super::SetupInputComponent();
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{
-		// 绑定 Alt 键
-		EnhancedInputComponent->BindAction(AltAction, ETriggerEvent::Started, this, &AOnePlayerController::ToggleMouseCursor);
+    if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+    {
+        EnhancedInputComponent->BindAction(AltAction, ETriggerEvent::Started, this, &AOnePlayerController::ToggleMouseCursor);
 
-		// 【新增】绑定 鼠标左键 (注意这里检查一下指针是否为空，防止编辑器没设置崩溃)
-		if (ClickAction)
-		{
-			EnhancedInputComponent->BindAction(ClickAction, ETriggerEvent::Started, this, &AOnePlayerController::OnClickScreen);
-		}
-	}
+        if (ClickAction)
+        {
+            EnhancedInputComponent->BindAction(ClickAction, ETriggerEvent::Started, this, &AOnePlayerController::OnClickScreen);
+        }
+    }
 }
 
-void AOnePlayerController::ShowDamageNumber_Implementation(float DamageAmount,ACharacter* TargetCharacter,bool bCriticalHit)
+void AOnePlayerController::OpenDialogue(UDialogueDataAsset* DialogueData, AActor* InteractionSource)
 {
-	if (IsValid(TargetCharacter) && DamageTextComponentClass)
-	{
-		UDamageTextComponent* DamageText = NewObject<UDamageTextComponent>(TargetCharacter,DamageTextComponentClass);
-		DamageText->RegisterComponent();
-		DamageText->AttachToComponent(TargetCharacter->GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
-		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-		DamageText->DamageText(DamageAmount,bCriticalHit);
-	}
+    if (!IsLocalController() || !DialogueData || !DialogueWidgetClass || ActiveDialogueWidget) return;
+
+    ActiveDialogueWidget = CreateWidget<UDialogueWidget>(this, DialogueWidgetClass);
+    if (!ActiveDialogueWidget) return;
+
+    ActiveInteractionSource = InteractionSource;
+    ActiveDialogueWidget->OnDialogueFinished.AddDynamic(this, &AOnePlayerController::HandleDialogueFinished);
+    ActiveDialogueWidget->AddToViewport(100);
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetWidgetToFocus(ActiveDialogueWidget->TakeWidget());
+    InputMode.SetHideCursorDuringCapture(false);
+    SetInputMode(InputMode);
+    bShowMouseCursor = true;
+    SetPause(true);
+    ActiveDialogueWidget->InitializeDialogue(DialogueData);
+}
+
+void AOnePlayerController::CloseDialogue()
+{
+    if (ActiveDialogueWidget)
+    {
+        ActiveDialogueWidget->RemoveFromParent();
+        ActiveDialogueWidget = nullptr;
+    }
+
+    ActiveInteractionSource = nullptr;
+    SetPause(false);
+    bShowMouseCursor = false;
+    FInputModeGameOnly InputMode;
+    SetInputMode(InputMode);
+}
+
+void AOnePlayerController::HandleDialogueFinished()
+{
+    AActor* FinishedSource = ActiveInteractionSource;
+    APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+    CloseDialogue();
+
+    if (IsValid(FinishedSource) && FinishedSource->Implements<UInteractableInterface>())
+    {
+        IInteractableInterface::Execute_OnInteractionFinished(FinishedSource, PlayerCharacter);
+    }
+}
+
+void AOnePlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter, bool bCriticalHit)
+{
+    if (IsValid(TargetCharacter) && DamageTextComponentClass)
+    {
+        UDamageTextComponent* DamageText = NewObject<UDamageTextComponent>(TargetCharacter, DamageTextComponentClass);
+        DamageText->RegisterComponent();
+        DamageText->AttachToComponent(TargetCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+        DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+        DamageText->DamageText(DamageAmount, bCriticalHit);
+    }
 }
 
 void AOnePlayerController::BeginPlay()
 {
-	Super::BeginPlay();
-	
-	// ? 1. 强行隐藏鼠标
-	bShowMouseCursor = false;
+    Super::BeginPlay();
 
-	// ? 2. 创建“仅游戏”输入模式配置
-	FInputModeGameOnly InputModeData;
-    
-	// (可选) 确保鼠标被锁定在游戏视口内，防止切屏误触
-	InputModeData.SetConsumeCaptureMouseDown(true); 
+    bShowMouseCursor = false;
 
-	// ? 3. 强行把输入焦点全部还给游戏世界和你的角色
-	SetInputMode(InputModeData);
-	
-	// 安全检查
-	if (PlayerContext)
-	{
-		if (ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player))
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
-			{
-				Subsystem->AddMappingContext(PlayerContext, 0);
-			}
-		}
-	}
+    FInputModeGameOnly InputModeData;
+    InputModeData.SetConsumeCaptureMouseDown(true);
+    SetInputMode(InputModeData);
+
+    // Install the gameplay mapping context for the local player.
+    if (PlayerContext)
+    {
+        if (ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player))
+        {
+            if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+            {
+                Subsystem->AddMappingContext(PlayerContext, 0);
+            }
+        }
+    }
 }
-
-
-
-

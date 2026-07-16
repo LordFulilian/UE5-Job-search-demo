@@ -19,7 +19,7 @@
 
 AEnemyCharacter::AEnemyCharacter()
 {
-	// 创建能力系统组件
+	// Create the replicated ability-system component.
 	AbilitySystemComponent = CreateDefaultSubobject<UPlayerAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
@@ -29,7 +29,7 @@ AEnemyCharacter::AEnemyCharacter()
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
-	// 构建属性集
+	// Create the enemy attribute set.
 	AttributeSet = CreateDefaultSubobject<UPlayerAttributeSet>(TEXT("AttributeSet"));
 	
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
@@ -42,7 +42,12 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 	
 	if (!HasAuthority()) return;
 	PlayerAIController = Cast<APlayerAIController>(NewController);
-	
+	if (!PlayerAIController || !BehaviorTree || !BehaviorTree->BlackboardAsset)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s requires PlayerAIController and a BehaviorTree with a Blackboard."), *GetName());
+		return;
+	}
+
 	PlayerAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 	PlayerAIController->RunBehaviorTree(BehaviorTree);
 	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"),false);
@@ -52,19 +57,19 @@ void AEnemyCharacter::PossessedBy(AController* NewController)
 // 
 void AEnemyCharacter::ToggleHighlight_Implementation(bool bActive)
 {
-	// 🔴 1. 改为获取所有的 网格体组件 (MeshComponent)
+	// Highlight every mesh component owned by the enemy.
 	TArray<UMeshComponent*> MeshComponents;
 	GetComponents<UMeshComponent>(MeshComponents);
     
-	// 🔴 2. 遍历所有的网格体组件
+	// Apply custom-depth settings to each mesh.
 	for (UMeshComponent* Component : MeshComponents)
 	{
 		if (Component)
 		{
-			// 开启/关闭自定义深度
+			// Toggle custom-depth rendering.
 			Component->SetRenderCustomDepth(bActive);
 
-			// 设置模具值 (Stencil Value) 为 250 (红色)
+			// Stencil value 250 selects the enemy outline color.
 			if (bActive)
 			{
 				Component->SetCustomDepthStencilValue(250);
@@ -124,6 +129,8 @@ void AEnemyCharacter::BeginPlay()
 {
 
 	Super::BeginPlay();
+	HomeLocation = GetActorLocation();
+	
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	InitAbilityActorInfo();
 
@@ -180,6 +187,30 @@ void AEnemyCharacter::BeginPlay()
 	}
 
 }
+
+FVector AEnemyCharacter::SelectNextPatrolLocation()
+{
+	if (PatrolPoints.IsEmpty())
+	{
+		return HomeLocation;
+	}
+
+	for (int32 Attempt = 0; Attempt < PatrolPoints.Num(); ++Attempt)
+	{
+		PatrolPointIndex =
+			(PatrolPointIndex + 1) % PatrolPoints.Num();
+
+		AActor* PatrolPoint = PatrolPoints[PatrolPointIndex];
+
+		if (IsValid(PatrolPoint))
+		{
+			return PatrolPoint->GetActorLocation();
+		}
+	}
+
+	return HomeLocation;
+}
+
 void AEnemyCharacter::HitReactTagChange(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	bHitReacting = NewCount > 0;
@@ -205,5 +236,3 @@ void AEnemyCharacter::InitialzeDefaultAttributes()
 {
 	UPlayerAbilitySystemLibrary::InitialzeDefaultAttributes(this,CharacterClass,Level,AbilitySystemComponent);
 }
-
-

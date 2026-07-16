@@ -41,6 +41,7 @@ public:
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
 	
 	FGameplayTag Effects_Hit_react;
+	FGameplayTag State_Invulnerable;
 	
 private:
 	static FPlayerGameplayTags GameplayTags;

@@ -8,15 +8,18 @@
 
 void UPlayerAbilitySystemComponent::AbilityActorInfoSet()
 {
+	OnGameplayEffectAppliedDelegateToSelf.RemoveAll(this);
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this,&UPlayerAbilitySystemComponent::EffectApplied);
 	
 }
 
 void UPlayerAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilities)
 {
+	if (!IsOwnerActorAuthoritative()) return;
+
 	for (const TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilities)
 	{
-		if (!AbilityClass) continue;
+		if (!AbilityClass || FindAbilitySpecFromClass(AbilityClass)) continue;
 
 		 FGameplayAbilitySpec AbilitySpec =  FGameplayAbilitySpec(AbilityClass,1);
 		 if (const UPlayerGameplayAbility* PlayerAbility = Cast<UPlayerGameplayAbility>(AbilitySpec.Ability))
@@ -24,6 +27,33 @@ void UPlayerAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclass
 		 	AbilitySpec.GetDynamicSpecSourceTags().AddTag(PlayerAbility->StartupInputTag);
 		 }
 		 GiveAbility(AbilitySpec);
+	}
+}
+
+void UPlayerAbilitySystemComponent::SetCharacterAbilities(
+	const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilities)
+{
+	if (!IsOwnerActorAuthoritative()) return;
+
+	for (const FGameplayAbilitySpecHandle Handle : CharacterAbilityHandles)
+	{
+		ClearAbility(Handle);
+	}
+	CharacterAbilityHandles.Reset();
+
+	for (const TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilities)
+	{
+		if (!AbilityClass) continue;
+
+		FGameplayAbilitySpec AbilitySpec(AbilityClass, 1);
+		if (const UPlayerGameplayAbility* PlayerAbility =
+			Cast<UPlayerGameplayAbility>(AbilitySpec.Ability))
+		{
+			AbilitySpec.GetDynamicSpecSourceTags().AddTag(
+				PlayerAbility->StartupInputTag);
+		}
+
+		CharacterAbilityHandles.Add(GiveAbility(AbilitySpec));
 	}
 }
 

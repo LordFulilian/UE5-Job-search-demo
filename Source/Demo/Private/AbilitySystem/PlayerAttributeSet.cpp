@@ -5,6 +5,7 @@
 #include "PlayerGameplayTags.h"
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "AbilitySystem/PlayerAbilitySystemLibrary.h"
+#include "Character/BossCharacter.h"
 #include "GameFramework/Character.h"
 #include "interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
@@ -179,14 +180,17 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
        // Apply damage to health.
       if (LocalIncomingDamage > 0.f)
       {
-         const float NewHealth = GetHealth() - LocalIncomingDamage;
-         SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-      	
-      	if (GEngine)
-      	{
-      		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("【底层扣血成功】当前真实剩余血量: %f"), GetHealth()));
-      	}
-         
+		 if (ABossCharacter* Boss = Cast<ABossCharacter>(Props.TargetAvatarActor))
+		 {
+			Boss->RecordQuestDamageSource(
+				Props.SourceController, Props.SourceAvatarActor);
+		 }
+
+         const float PreviousHealth = GetHealth();
+         const float MaxHealthValue = GetMaxHealth();
+         const float NewHealth = PreviousHealth - LocalIncomingDamage;
+         SetHealth(FMath::Clamp(NewHealth, 0.f, MaxHealthValue));
+
          const bool bFatal = NewHealth <= 0.f;
          
          if (bFatal)
@@ -194,6 +198,11 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
             ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor);
             if (CombatInterface)
             {
+               // Preserve the damage source for XP and quest completion in Die().
+               if (APawn* SourcePawn = Cast<APawn>(Props.SourceAvatarActor))
+               {
+                  Props.TargetAvatarActor->SetInstigator(SourcePawn);
+               }
                CombatInterface->Die();
             }
          }
@@ -201,7 +210,10 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffect
          {
             FGameplayTagContainer TagContainer;
             TagContainer.AddTag(FPlayerGameplayTags::Get().Effects_Hit_react);
-            Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+            if (Props.TargetASC)
+            {
+               Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+            }
          }
          
          const bool bCriticalHit = UPlayerAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);

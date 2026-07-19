@@ -6,8 +6,15 @@
 #include "AbilitySystemComponent.h"
 #include "Engine/World.h"
 #include "AbilitySystem/PlayerAttributeSet.h"
-#include "DrawDebugHelpers.h" 
 #include "PlayerGameplayTags.h"
+#include "interaction/EnemyInterface.h"
+
+namespace PlayerCollisionChannels
+{
+    // Keep these aligned with DefaultEngine.ini's Player and Enemy object channels.
+    constexpr ECollisionChannel Player = ECC_GameTraceChannel1;
+    constexpr ECollisionChannel Enemy = ECC_GameTraceChannel2;
+}
 
 UPlayerMeleeAttack::UPlayerMeleeAttack()
 {
@@ -24,18 +31,10 @@ void UPlayerMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle
        return;
     }
 
-    // Validate combo configuration before creating ability tasks.
+    // Invalid combo data degrades to a single attack.
     if (MaxComboCount > 1 && !ComboEventTag.IsValid())
     {
-        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("⚠️ 提示: 设定为多段攻击，但未配置 ComboEventTag"));
-    }
-
-    ComboCount = 1;
-    bSaveAttack = false;
-    // Reinitialize combo state for this activation.
-    if (MaxComboCount > 1 && !ComboEventTag.IsValid())
-    {
-        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, TEXT("⚠️ 提示: 设定为多段攻击，但未配置 ComboEventTag"));
+        MaxComboCount = 1;
     }
 
     ComboCount = 1;
@@ -129,10 +128,6 @@ void UPlayerMeleeAttack::OnComboEventReceived(FGameplayEventData Payload)
             AnimInstance->Montage_JumpToSection(NextSection, AttackMontage);
         }
     }
-    else
-    {
-        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, TEXT("⏳ 没按键，连招结束，自然收招。"));
-    }
 }
 
 void UPlayerMeleeAttack::OnMontageCompleted()
@@ -180,21 +175,43 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
     FCollisionQueryParams QueryParams;
     QueryParams.AddIgnoredActor(AvatarActor); 
 
-    FHitResult HitResult;
-    bool bHit = World->SweepSingleByChannel(HitResult, StartLocation, EndLocation, FQuat::Identity, ECollisionChannel::ECC_Pawn, SphereShape, QueryParams);
+    FCollisionObjectQueryParams ObjectQueryParams;
+    ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+    ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+    ObjectQueryParams.AddObjectTypesToQuery(PlayerCollisionChannels::Player);
+    ObjectQueryParams.AddObjectTypesToQuery(PlayerCollisionChannels::Enemy);
 
-#if WITH_EDITOR
-    DrawDebugSphere(World, StartLocation, TraceRadius, 12, FColor::Green, false, 2.f);
-    if (bHit) DrawDebugSphere(World, HitResult.ImpactPoint, TraceRadius, 12, FColor::Red, false, 2.f);
-#endif
+    TArray<FHitResult> HitResults;
+    const bool bHit = World->SweepMultiByObjectType(
+        HitResults,
+        StartLocation,
+        EndLocation,
+        FQuat::Identity,
+        ObjectQueryParams,
+        SphereShape,
+        QueryParams);
 
-    if (bHit && HitResult.GetActor())
+    if (!bHit) return;
+
+    const bool bSourceIsEnemy = AvatarActor->Implements<UEnemyInterface>();
+
+    for (const FHitResult& HitResult : HitResults)
     {
        AActor* TargetActor = HitResult.GetActor();
+       if (!IsValid(TargetActor))
+       {
+           continue;
+       }
+
        UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
        UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 
-       if (!TargetASC || !DamageEffectClass) return;
+       const bool bTargetIsEnemy = TargetActor->Implements<UEnemyInterface>();
+       if (bSourceIsEnemy == bTargetIsEnemy ||
+           !SourceASC || !TargetASC || !DamageEffectClass)
+       {
+           continue;
+       }
 
        FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
        EffectContext.AddHitResult(HitResult);
@@ -206,6 +223,8 @@ void UPlayerMeleeAttack::PerformMeleeTraceAndApplyDamage()
            const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
            UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage_Physical, ScaledDamage);
            SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+
+           break;
         }
     }
 }

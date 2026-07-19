@@ -19,6 +19,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/ItemPickup.h"
 #include "Components/InventoryComponent.h" 
+#include "Components/QuestComponent.h"
 #include "UI/Inventory/InventoryPanelWidget.h"
 #include "input/PlayerInputComponent.h" 
 #include "interaction/EnemyInterface.h" 
@@ -50,6 +51,7 @@ APlayerCharacter::APlayerCharacter()
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
     FollowCamera->bUsePawnControlRotation = false; 
+
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)
@@ -67,6 +69,20 @@ void APlayerCharacter::OnRep_Controller()
 UAbilitySystemComponent* APlayerCharacter::GetAbilitySystemComponent() const
 {
     return AbilitySystemComponent;
+}
+
+UQuestComponent* APlayerCharacter::GetQuestComponent() const
+{
+    if (const AOPlayerState* OPlayerState = GetPlayerState<AOPlayerState>())
+    {
+        return OPlayerState->GetQuestComponent();
+    }
+    return nullptr;
+}
+
+UInventoryComponent* APlayerCharacter::GetInventoryComponent() const
+{
+	return FindComponentByClass<UInventoryComponent>();
 }
 
 int32 APlayerCharacter::GetPlayerLevel()
@@ -107,8 +123,7 @@ void APlayerCharacter::InitAbilityActorInfo()
                 static_cast<float>(GetPlayerLevel()), 
                 VitalCtx);
             AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*VitalSpec.Data.Get());
-            UE_LOG(LogTemp, Log, TEXT("[PlayerCharacter] Applied VitalAttributes from CharacterClassInfo"));
-        }
+		}
     } 
     
     // ==========================================
@@ -116,7 +131,7 @@ void APlayerCharacter::InitAbilityActorInfo()
     // ==========================================
     if (UPlayerAbilitySystemComponent* PlayerASC = Cast<UPlayerAbilitySystemComponent>(AbilitySystemComponent))
     {
-        PlayerASC->AddCharacterAbilities(StartupAbilities); 
+		PlayerASC->SetCharacterAbilities(StartupAbilities);
     }
 
     if (AOnePlayerController* OnePlayerController = Cast<AOnePlayerController>(GetController()))
@@ -135,6 +150,27 @@ void APlayerCharacter::BeginPlay()
     if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
     {
         MovementComponent->MaxWalkSpeed = WalkSpeed;
+    }
+}
+
+void APlayerCharacter::Die()
+{
+    if (IsDeathSequenceStarted()) return;
+
+    if (bIsHardLocked && IsValid(LockedTarget) &&
+        LockedTarget->Implements<UEnemyInterface>())
+    {
+        IEnemyInterface::Execute_ToggleHighlight(LockedTarget, false);
+    }
+    bIsHardLocked = false;
+    LockedTarget = nullptr;
+
+    Super::Die();
+
+    if (AOnePlayerController* PlayerController =
+        Cast<AOnePlayerController>(GetController()))
+    {
+        PlayerController->ClientShowDeathScreen();
     }
 }
 
@@ -296,6 +332,19 @@ void APlayerCharacter::Dash()
 
 void APlayerCharacter::Interact()
 {
+    if (AActor* InteractableActor = NearbyInteractable.Get())
+    {
+        if (InteractableActor->Implements<UInteractableInterface>() &&
+            IInteractableInterface::Execute_CanInteract(
+                InteractableActor, this))
+        {
+            IInteractableInterface::Execute_Interact(InteractableActor, this);
+            return;
+        }
+
+        NearbyInteractable.Reset();
+    }
+
     const FVector TraceStart = FollowCamera ? FollowCamera->GetComponentLocation() : GetActorLocation();
     const FVector TraceEnd = TraceStart + (FollowCamera ? FollowCamera->GetForwardVector() : GetActorForwardVector()) * InteractionDistance;
     FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(PlayerInteraction), false, this);
@@ -335,6 +384,23 @@ void APlayerCharacter::Interact()
                 Pickup->Destroy();
             }
         }
+    }
+}
+
+void APlayerCharacter::SetNearbyInteractable(AActor* InteractableActor)
+{
+    if (IsValid(InteractableActor) &&
+        InteractableActor->Implements<UInteractableInterface>())
+    {
+        NearbyInteractable = InteractableActor;
+    }
+}
+
+void APlayerCharacter::ClearNearbyInteractable(AActor* InteractableActor)
+{
+    if (NearbyInteractable.Get() == InteractableActor)
+    {
+        NearbyInteractable.Reset();
     }
 }
 

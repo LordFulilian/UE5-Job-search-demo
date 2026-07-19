@@ -39,7 +39,7 @@ struct FPlayerAbilityInfo
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType)
 class DEMO_API UAbilityInfo : public UDataAsset
 {
 	GENERATED_BODY()
@@ -47,6 +47,10 @@ class DEMO_API UAbilityInfo : public UDataAsset
 public:
 	UFUNCTION(BlueprintCallable)
 	FPlayerAbilityInfo FindAbilityInfoForTag(const FGameplayTag& AbilityTag, bool bLogNotFound = false) const;
+
+	UFUNCTION(BlueprintPure, Category = "Ability|Data")
+	FPlayerAbilityInfo FindAbilityInfoForClass(
+		TSubclassOf<UGameplayAbility> AbilityClass) const;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<FPlayerAbilityInfo> AbilityInformation;

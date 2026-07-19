@@ -14,7 +14,7 @@ class UAttributeSet;
 class UGameplayEffect;
 class UAnimMontage;
 
-UCLASS(Abstract)
+UCLASS(Abstract, BlueprintType, Blueprintable)
 class DEMO_API ACharacterBase : public ACharacter, public IAbilitySystemInterface,public ICombatInterface
 {
 	GENERATED_BODY()
@@ -22,12 +22,15 @@ class DEMO_API ACharacterBase : public ACharacter, public IAbilitySystemInterfac
 public:
 	ACharacterBase();
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UFUNCTION(BlueprintPure, Category = "Ability")
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 	virtual  int32 GetPlayerLevel() override;
 	virtual UAnimMontage * GetHitReactMontage_Implementation() override;
 	
 	virtual void Die() override;
+	UFUNCTION(BlueprintPure, Category = "Death")
+	bool IsDeathSequenceStarted() const { return bDeathSequenceStarted; }
 	
 	UFUNCTION(NetMulticast,Reliable)
 	virtual void MulticasHamdleDeath();
@@ -63,6 +66,13 @@ protected:
 	
 	UPROPERTY(EditAnywhere,Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+
+	bool bDeathSequenceStarted = false;
+	bool bDeathPhysicsApplied = false;
+	FTimerHandle DeathPhysicsFallbackTimer;
+
+	void FinishDeathSequence();
+	void ApplyDeathPhysics();
 private:
 	
 	UPROPERTY(EditAnywhere, Category = "Combat")

@@ -12,9 +12,10 @@ class UCameraComponent;
 class UInputAction;
 class UInventoryPanelWidget;
 class UInventoryComponent;
+class UQuestComponent;
 class UAnimMontage;
 
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class DEMO_API APlayerCharacter : public ACharacterBase
 {
     GENERATED_BODY()
@@ -24,8 +25,24 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void PossessedBy(AController* NewController) override;
+    virtual void Die() override;
 
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION(BlueprintPure, Category = "Quest")
+	UQuestComponent* GetQuestComponent() const;
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UInventoryComponent* GetInventoryComponent() const;
+
+	UFUNCTION(BlueprintPure, Category = "Ability|Loadout")
+	TArray<TSubclassOf<UGameplayAbility>> GetStartupAbilityClasses() const
+	{
+		return StartupAbilities;
+	}
+
+    void SetNearbyInteractable(AActor* InteractableActor);
+    void ClearNearbyInteractable(AActor* InteractableActor);
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ToggleOpenPanelAction();
@@ -124,4 +141,7 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
     float InteractionDistance = 350.f;
+
+    UPROPERTY(Transient)
+    TWeakObjectPtr<AActor> NearbyInteractable;
 };

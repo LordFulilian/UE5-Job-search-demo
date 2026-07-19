@@ -6,6 +6,7 @@
 #include "AbilitySystem/PlayerAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
 
 
 
@@ -40,51 +41,121 @@ UAnimMontage* ACharacterBase::GetHitReactMontage_Implementation()
 
 void ACharacterBase::Die()
 {
-	Weapon->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld,true));
+	if (bDeathSequenceStarted) return;
+	bDeathSequenceStarted = true;
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->CancelAllAbilities();
+	}
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+	{
+		Movement->DisableMovement();
+	}
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	if (Weapon)
+	{
+		Weapon->DetachFromComponent(
+			FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+	}
+
+	float DeathPhysicsDelay = 0.25f;
 
 	if (DeathMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
-		// Enter ragdoll immediately when the death montage completes.
 		FOnMontageEnded EndDelegate;
-		EndDelegate.BindWeakLambda(this, [this](UAnimMontage* Montage, bool bInterrupted)
+		EndDelegate.BindWeakLambda(this, [this](UAnimMontage*, bool)
 		{
-			if (!bInterrupted)
-			{
-				MulticasHamdleDeath();
-			}
+			FinishDeathSequence();
 		});
-		GetMesh()->GetAnimInstance()->Montage_Play(DeathMontage);
-		GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, DeathMontage);
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		const float MontageDuration = AnimInstance->Montage_Play(DeathMontage);
+		if (MontageDuration > 0.f)
+		{
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, DeathMontage);
+			DeathPhysicsDelay = MontageDuration + 0.25f;
+		}
+		else
+		{
+			FinishDeathSequence();
+		}
 	}
 	else
 	{
+		FinishDeathSequence();
+	}
+
+	if (!bDeathPhysicsApplied)
+	{
+		GetWorldTimerManager().SetTimer(
+			DeathPhysicsFallbackTimer,
+			this,
+			&ACharacterBase::FinishDeathSequence,
+			DeathPhysicsDelay,
+			false);
+	}
+}
+
+void ACharacterBase::FinishDeathSequence()
+{
+	if (bDeathPhysicsApplied) return;
+
+	if (HasAuthority())
+	{
 		MulticasHamdleDeath();
+	}
+	else
+	{
+		ApplyDeathPhysics();
 	}
 }
 
 void ACharacterBase::MulticasHamdleDeath_Implementation()
 {
-	// Disable capsule so it doesn't push the ragdoll
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ApplyDeathPhysics();
+}
 
-	// Disable movement entirely
-	GetCharacterMovement()->DisableMovement();
+void ACharacterBase::ApplyDeathPhysics()
+{
+	if (bDeathPhysicsApplied) return;
+	bDeathPhysicsApplied = true;
+	GetWorldTimerManager().ClearTimer(DeathPhysicsFallbackTimer);
 
-	// Weapon: drop with physics
-	Weapon->SetSimulatePhysics(true);
-	Weapon->SetEnableGravity(true);
-	Weapon->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 
-	// Mesh: ragdoll with damped physics
-	GetMesh()->SetAllBodiesSimulatePhysics(true);
-	GetMesh()->SetEnableGravity(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+	{
+		Movement->DisableMovement();
+	}
 
-	// Reduce explosion: apply linear damping
-	GetMesh()->SetLinearDamping(0.5f);
-	GetMesh()->SetAngularDamping(1.0f);
+	if (Weapon)
+	{
+		Weapon->SetSimulatePhysics(true);
+		Weapon->SetEnableGravity(true);
+		Weapon->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+
+	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	{
+		// Stop the animation state machine from restoring an idle pose after
+		// the death montage, while physics takes ownership of the bones.
+		CharacterMesh->bPauseAnims = true;
+		CharacterMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+		CharacterMesh->SetAllBodiesSimulatePhysics(true);
+		CharacterMesh->SetEnableGravity(true);
+		CharacterMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		CharacterMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+		CharacterMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		CharacterMesh->SetLinearDamping(0.5f);
+		CharacterMesh->SetAngularDamping(1.0f);
+	}
 }
 
 void ACharacterBase::BeginPlay()
@@ -122,8 +193,5 @@ void ACharacterBase::AddCharacterAbilities()
 	
 	PlayerASC->AddCharacterAbilities(StartupAbilities);
 }
-
-
-
 
 

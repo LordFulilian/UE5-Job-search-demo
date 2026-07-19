@@ -5,6 +5,8 @@
 #include <AbilitySystem/PlayerAbilitySystemComponent.h>
 #include <AbilitySystem/PlayerAttributeSet.h>
 #include "Components/ExpComponent.h"
+#include "Components/PartyComponent.h"
+#include "Components/QuestComponent.h"
 #include "Net/UnrealNetwork.h"
 
 AOPlayerState::AOPlayerState()
@@ -18,6 +20,8 @@ AOPlayerState::AOPlayerState()
 	AttributeSet = CreateDefaultSubobject<UPlayerAttributeSet>(TEXT("AttributeSet"));
 
 	ExpComponent = CreateDefaultSubobject<UExpComponent>(TEXT("ExpComponent"));
+	QuestComponent = CreateDefaultSubobject<UQuestComponent>(TEXT("QuestComponent"));
+	PartyComponent = CreateDefaultSubobject<UPartyComponent>(TEXT("PartyComponent"));
 	
 
 	NetUpdateFrequency = 100.f;

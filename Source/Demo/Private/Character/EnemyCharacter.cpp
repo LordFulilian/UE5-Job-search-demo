@@ -215,7 +215,11 @@ void AEnemyCharacter::HitReactTagChange(const FGameplayTag CallbackTag, int32 Ne
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f: BaseWalkSpeed;
-	PlayerAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"),bHitReacting);
+	if (PlayerAIController && PlayerAIController->GetBlackboardComponent())
+	{
+		PlayerAIController->GetBlackboardComponent()->SetValueAsBool(
+			FName("HitReacting"), bHitReacting);
+	}
 	
 }
 

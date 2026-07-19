@@ -139,8 +139,6 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CritRateDef, EvaluateParameters, CritRate);
     CritRate = FMath::Max<float>(0.f, CritRate);
     
-    UE_LOG(LogTemp, Warning, TEXT("【GAS 调试】成功抓取到 Source(攻击者) 的面板暴击率: %f"), CritRate);
-
     // Scale mitigated base damage by the source attack percentage.
     // BaseDamage is the SetByCaller value (e.g. from curve table). Attack acts as a percentage bonus.
     float TotalDamage = BaseDamage * (1.0f + Attack / 100.0f);
@@ -156,7 +154,6 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
             if (DefenseCurve)
             {
                 DefenseCoefficient = DefenseCurve->Eval(SourceCombatInterface->GetPlayerLevel());
-                UE_LOG(LogTemp, Log, TEXT("[ExecCalc_Damage] Using DefenseCoefficient from curve: %.1f"), DefenseCoefficient);
             }
         }
     } 
@@ -190,12 +187,4 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
     const FGameplayModifierEvaluatedData EvaluatedData(UPlayerAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, TotalDamage);
     OutExecutionOutput.AddOutputModifier(EvaluatedData);
     
-    // Emit detailed combat diagnostics.
-    UE_LOG(LogTemp, Warning, TEXT("【GAS 伤害结算】基础魔伤:%f, 攻击力:%f, 暴击率:%f, 是否暴击:%s, 目标防御:%f, 最终伤害:%f"), 
-        BaseDamage, 
-        Attack, 
-        CritRate, 
-        bCriticalHit ? TEXT("True(触发)") : TEXT("False(未触发)"), 
-        Defense, 
-        TotalDamage);
 }

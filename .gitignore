@@ -6,6 +6,7 @@ Intermediate/
 DerivedDataCache/
 Saved/
 Build/
+obj/
 
 # ===========================
 # Visual Studio 2022 专用规则
@@ -40,3 +41,15 @@ Thumbs.db
 Content/ParagonGrux/
 Content/ParagonShinbi/
 Content/Paragon*/
+
+# Local IDE state and Codex dependency clones
+.idea/
+.codex-unlua-*/
+
+# Optional Epic sample packs are installed locally, not stored in Git
+Content/KiteDemo/
+Content/SampleMap/
+Content/Lighting/
+
+# Local editor automation helper
+Scripts/UEGuiAutomation.ps1

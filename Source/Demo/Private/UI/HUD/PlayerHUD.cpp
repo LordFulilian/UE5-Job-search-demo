@@ -13,7 +13,10 @@ UOverlayWidgetController* APlayerHUD::GetOverlayWidgetController(const FWidgetCo
 		OverlayWidgetController = NewObject<UOverlayWidgetController>(this,OverlayWidgetControllerClass);
 		OverlayWidgetController->SetWidgetControllerParams(WCParams);
 		OverlayWidgetController->BindCallbacksToDependencies();
-		return OverlayWidgetController;
+	}
+	else
+	{
+		OverlayWidgetController->SetWidgetControllerParams(WCParams);
 	}
 	return OverlayWidgetController;
 }
@@ -34,8 +37,10 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 	checkf(OverlayWidgetClass,TEXT("Overlay Widget Class uninitialized,please fill out BP_PlayerHUD"));
 	checkf(OverlayWidgetControllerClass,TEXT("Overlay Widget Controller Class uninitilized,please fill out BP_PlayerHUD"));
 	
-	UUserWidget*Widget= CreateWidget<UUserWidget>(GetWorld(),OverlayWidgetClass);
-	OverlayWidget = Cast<UPlayerUserWidget>(Widget);
+	if (!OverlayWidget)
+	{
+		OverlayWidget = CreateWidget<UPlayerUserWidget>(PC, OverlayWidgetClass);
+	}
 	
 	const FWidgetControllerParams WidgetControllerParams(PC,PS,ASC,AS);
 	
@@ -43,9 +48,10 @@ void APlayerHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySy
 	
 	OverlayWidget->SetWidgetController(WidgetController);
 	WidgetController->BroadcastInitialValues();
-	
-	Widget->AddToViewport();
-	
-	
+
+	if (!OverlayWidget->IsInViewport())
+	{
+		OverlayWidget->AddToViewport();
+	}
 }
 

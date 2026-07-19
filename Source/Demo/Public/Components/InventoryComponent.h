@@ -63,7 +63,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 // =========================================================================
 // Inventory component owned by the player.
 // =========================================================================
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(BlueprintType, Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DEMO_API UInventoryComponent : public UActorComponent
 {
     GENERATED_BODY()
